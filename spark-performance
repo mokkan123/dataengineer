@@ -1,0 +1,26 @@
+Subject: Observations and Recommendations for Spark Job Performance
+
+
+
+Thank you for providing the video regarding the issue. Here are my observations:
+
+Based on what I've seen, the maximum job duration is approximately 44 minutes, the minimum is 2.7 minutes, and the median is 26 minutes for a single job. Ideally, in a parallel processing scenario, the job times should be more consistent and grouped closely together.
+
+There is indeed high CPU utilization due to data spilling. Spark typically writes data to disk in situations where there is insufficient memory for intermediate results, which can cause significant issues. Large shuffles, such as sorting or aggregating, can lead to disk spilling when memory is inadequate. These operations are resource-intensive and involve considerable CPU-level switching.
+
+To optimize performance and reduce excessive swapping, here are some suggestions to minimize CPU pressure and lessen the need for swap operations in Spark jobs:
+
+**Step 1:**  
+Increase Executor Memory (spark.executor.memory). Allocating more memory to Spark executors can help reduce the likelihood of data spilling.
+
+**Step 2:**  
+Decrease spark.memory.storageFraction. This adjustment allows for more memory to be allocated for execution, helping to prevent memory spills to disk during shuffle and join operations.
+
+A good starting point is to set spark.executor.memory to 3-4 GB per core. For a setup with 6 cores, you will need at least 18 to 24 GB of total executor memory.
+
+According to the Spark job output, we are currently experiencing a 3 GB memory spill. We can potentially achieve better performance by increasing the executor memory by 4-6 GB.
+
+Additionally, one of the nodes, Nodemanager (WB05), is experiencing a CPU spike. We need to check if any scheduled jobs are running locally or if there are extra applications. If that is the case, we should consider running those jobs at a different time since this node is currently overloaded with programs, including Airflow.
+
+Please let me know if you need further clarification or assistance. I suggest we set up a meeting today to discuss everything in detail.
+
