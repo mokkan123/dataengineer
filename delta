@@ -1,0 +1,28 @@
+
+
+Thank you for your time in troubleshooting the issue.
+
+To summarize, we currently have two issues:
+
+1. Historical Data Processing
+2. Delta Data Processing
+
+**Solution for Historical Data Processing:**
+
+Based on our observations, we need to increase the executor memory and determine the optimal value. This was previously explained in an earlier email.
+
+**Solution for Delta Data Processing:**
+
+During our troubleshooting, we identified slowness when pulling data from the Oracle database. Although we increased the number of partitions, we continued to experience slowness, and the garbage collection (GC) time was high. Additionally, processes kept going down and restarting. I do not have access to the container logs, but I believe this may be due to an out-of-memory (OOM) error.
+
+Please apply the recommendations below and monitor garbage collection and memory utilization. If the utilization remains high, consider increasing the memory and validating the results.
+
+Due to limited access to the container logs, I could not perform validation.
+
+Please start with the following configuration:
+
+- Number of cores per executor: 2
+- Executor memory: 16 GB
+- Number of executors: 8
+
+Please try it, and if you have any questions, let me know. We can continue our meeting to discuss this further.
