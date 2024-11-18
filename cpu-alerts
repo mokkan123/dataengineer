@@ -1,0 +1,29 @@
+CPU Usage and Resolution Approach
+
+The CPU usage is exceptionally high, ranging between 100 and 150 vcores, which is triggering CPU alerts. To address this issue, we need a combination of two approaches: cluster-side configuration and job optimization to ensure a balanced distribution of partitions across multiple nodes.
+
+Option 1: Cluster-Side Configuration
+To mitigate the high CPU usage, we need to configure the cluster to integrate YARN with cgroups. This integration provides resource isolation, enforcement, and efficient resource management, ensuring that each YARN container operates within its specified limits for CPU, memory, and other resources. This approach optimizes the performance and stability of the cluster.
+
+Here is an example configuration for enabling cgroups in the yarn-site.xml file:
+
+xml
+Copy code
+<property>
+    <name>yarn.nodemanager.container-executor.class</name>
+    <value>org.apache.hadoop.yarn.server.nodemanager.LinuxContainerExecutor</value>
+</property>
+
+<property>
+    <name>yarn.nodemanager.linux-container-executor.cgroups.mount</name>
+    <value>true</value>
+</property>
+
+<property>
+    <name>yarn.nodemanager.linux-container-executor.cgroups.strict-resource-usage</name>
+    <value>true</value>
+</property>
+Implementation Plan
+Test these configurations in the Dev/QA environment to validate their effectiveness and ensure no unintended side effects.
+Once verified, roll out the changes to the Prod cluster for full-scale deployment.
+By combining these cluster-side configurations with job-level optimizations, we can effectively distribute workloads and reduce excessive CPU usage, thereby enhancing overall cluster performance and stability.
