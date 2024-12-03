@@ -1,4 +1,6 @@
 
+spark.sql("SET spark.sql.retries=3")
+
 jdbc:postgresql://hostname:port/database?socketTimeout=60000&connectTimeout=30000
 
 2024-12-03 14:27:36,176 root         ERROR    Fallo en el JDBC para la tabla gmf_maestro_consulta: An error occurred while calling o134.save.
