@@ -51,3 +51,88 @@ Caused by: java.net.SocketException: Connection reset
     at org.postgresql.jdbc.PgConnectionCleaningAction.onClean(PgConnectionCleaningAction.java:89)
     at org.postgresql.util.LazyCleaner$Node.onClean(LazyCleaner.java:219)
     at org.postgresql.util.LazyCleaner$Node.clean(LazyCleaner.java:210)
+
+
+
+
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at org.apache.spark.sql.execution.datasources.SaveIntoDataSourceCommand.run(SaveIntoDataSourceCommand.scala:46)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at org.apache.spark.sql.execution.command.ExecutedCommandExec.sideEffectResult$lzycompute(commands.scala:70)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at org.apache.spark.sql.execution.command.ExecutedCommandExec.sideEffectResult(commands.scala:68)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at org.apache.spark.sql.execution.command.ExecutedCommandExec.doExecute(commands.scala:90)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at org.apache.spark.sql.execution.SparkPlan.$anonfun$execute$1(SparkPlan.scala:180)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at org.apache.spark.sql.execution.SparkPlan.$anonfun$executeQuery$1(SparkPlan.scala:218)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at org.apache.spark.rdd.RDDOperati
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - onScope$.withScope(RDDOperationScope.scala:151)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at org.apache.spark.sql.execution.SparkPlan.executeQuery(SparkPlan.scala:215)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at org.apache.spark.sql.execution.SparkPlan.execute(SparkPlan.scala:176)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at org.apache.spark.sql.execution.QueryExecution.toRdd$lzycompute(QueryExecution.scala:132)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at org.apache.spark.sql.execution.QueryExecution.toRdd(QueryExecution.scala:131)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at org.apache.spark.sql.DataFrameWriter.$anonfun$runCommand$1(DataFrameWriter.scala:989)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at org.apache.spark.sql.execution.SQLExecution$.$anonfun$withNewExecutionId$5(SQLExecution.scala:103)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at org.apache.spark.sql.execution.SQLExecution$.withSQLConfPropagated(SQLExecution.scala:163)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at org.apache.spark.sql.execution.SQLExecution$.$anonfun$withNewExecutionId$1(SQLExecution.scala:90)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at org.apache.spark.sql.SparkSession.withActive(SparkSession.scala:775)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at org.apache.spark.sql.execution.SQLExecution$.withNewExecutionId(SQLExecution.scala:64)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at org.apache.spark.sql.DataFrameWriter.runCommand(DataFrameWriter.scala:989)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at org.apache.spark.sql.DataFrameWriter.saveToV1Source(DataFrameWriter.scala:438)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at org.apache.spark.sql.DataFrameWriter.saveInternal(DataFrameWriter.scala:415)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at org.apache.spark.sql.DataFrameWriter.save(DataFrameWriter.scala:301)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at org.apache.spark.sql.DataFrameWriter.jdbc(DataFrameWriter.scala:817)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at java.lang.reflect.Method.invoke(Method.java:498)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at py4j.reflection.MethodInvoker.invoke(MethodInvoker.java:244)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at py4j.reflection.ReflectionEngine.invoke(ReflectionEngine.java:357)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at py4j.Gateway.invoke(Gateway.java:282)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at py4j.commands.AbstractCommand.invokeMethod(AbstractCommand.java:132)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at py4j.commands.CallCommand.execute(CallCommand.java:79)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at py4j.GatewayConnection.run(GatewayConnection.java:238)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at java.lang.Thread.run(Thread.java:750)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - Caused by: java.net.SocketException: Connection reset
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at java.net.SocketOutputStream.socketWrite(SocketOutputStream.java:115)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at java.net.SocketOutputStream.write(SocketOutputStream.java:155)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at java.io.BufferedOutputStream.flushBuffer(BufferedOutputStream.java:82)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at java.io.BufferedOutputStream.flush(BufferedOutputStream.java:140)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at org.postgresql.core.PGStream.flush(PGStream.java:724)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at org.postgresql.core.QueryExecutorCloseAction.close(QueryExecutorCloseAction.java:73)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at org.postgresql.jdbc.PgConnectionCleaningAction.onClean(PgConnectionCleaningAction.java:89)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at org.postgresql.util.LazyCleaner$Node.onClean(LazyCleaner.java:219)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at org.postgresql.util.LazyCleaner$Node.clean(LazyCleaner.java:210)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	at org.postgresql.jdbc.PgConnection.close(PgConnection.java:867)
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 	... 34 more
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - Picked up _JAVA_OPTIONS: -Djava.io.tmpdir=/opt/lakeapps/tmp  -Dorg.xerial.snappy.tempdir=/opt/lakeapps/tmp
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 2024-12-03 14:55:19,497 root         INFO     execute_call_prc_gmf_procesos_carga
+[2024-12-03, 14:55:19 -05] {ssh.py:526} INFO - 2024-12-03 14:55:19,515 root         ERROR    Se presento error en el cargue para la tabla gmf_maestro_consulta
+[2024-12-03, 14:55:59 -05] {ssh.py:526} INFO - Deleted 251 files and directories in a total of 1 directories.
+[2024-12-03, 14:55:59 -05] {ssh.py:526} INFO - Traceback (most recent call last):
+[2024-12-03, 14:55:59 -05] {ssh.py:526} INFO -   File "/opt/lakeapps/GEN-343-TUCO-DATALAKE/CargaDB/run_TableDBLoad.py", line 122, in <module>
+[2024-12-03, 14:55:59 -05] {ssh.py:526} INFO -     
+[2024-12-03, 14:55:59 -05] {ssh.py:526} INFO - result = main()
+[2024-12-03, 14:55:59 -05] {ssh.py:526} INFO -   File "/opt/lakeapps/GEN-343-TUCO-DATALAKE/CargaDB/run_TableDBLoad.py", line 103, in main
+[2024-12-03, 14:55:59 -05] {ssh.py:526} INFO -     carga_db_tabla(cycle_date, table, folder_parquet).carga_db_tabla()
+[2024-12-03, 14:55:59 -05] {ssh.py:526} INFO -   File "/opt/lakeapps/GEN-343-TUCO-DATALAKE/CargaDB/dist/MainClass.zip/stopwatch.py", line 10, in wrapper
+[2024-12-03, 14:55:59 -05] {ssh.py:526} INFO -   File "/opt/lakeapps/GEN-343-TUCO-DATALAKE/CargaDB/dist/DAG-carga_db.zip/carga_tabla.py", line 47, in carga_db_tabla
+[2024-12-03, 14:55:59 -05] {ssh.py:526} INFO -   File "/opt/lakeapps/GEN-343-TUCO-DATALAKE/CargaDB/dist/MainClass.zip/stopwatch.py", line 10, in wrapper
+[2024-12-03, 14:55:59 -05] {ssh.py:526} INFO -   File "/opt/lakeapps/GEN-343-TUCO-DATALAKE/CargaDB/dist/DAG-carga_db.zip/carga_db.py", line 479, in carga_db_init
+[2024-12-03, 14:55:59 -05] {ssh.py:526} INFO - Exception: Se presento error en el cargue para la tabla gmf_maestro_consulta
+[2024-12-03, 14:56:00 -05] {taskinstance.py:2728} ERROR - Task failed with exception
+Traceback (most recent call last):
+  File "/opt/lakeapps/anaconda3/lib/python3.11/site-packages/airflow/models/taskinstance.py", line 444, in _execute_task
+    result = _execute_callable(context=context, **execute_callable_kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/lakeapps/anaconda3/lib/python3.11/site-packages/airflow/models/taskinstance.py", line 414, in _execute_callable
+    return execute_callable(context=context, **execute_callable_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/lakeapps/anaconda3/lib/python3.11/site-packages/airflow/providers/ssh/operators/ssh.py", line 191, in execute
+    result = self.run_ssh_client_command(ssh_client, self.command, context=context)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/lakeapps/anaconda3/lib/python3.11/site-packages/airflow/providers/ssh/operators/ssh.py", line 179, in run_ssh_client_command
+    self.raise_for_status(exit_status, agg_stderr, context=context)
+  File "/opt/lakeapps/anaconda3/lib/python3.11/site-packages/airflow/providers/ssh/operators/ssh.py", line 173, in raise_for_status
+    raise AirflowException(f"SSH operator error: exit status = {exit_status}")
+airflow.exceptions.AirflowException: SSH operator error: exit status = 1
+[2024-12-03, 14:56:00 -05] {taskinstance.py:1149} INFO - Marking task as UP_FOR_RETRY. dag_id=DAG-CARGA_DB, task_id=gmf_maestro_consulta, execution_date=20241203T080121, start_date=20241203T194337, end_date=20241203T195600
+[2024-12-03, 14:56:00 -05] {standard_task_runner.py:107} ERROR - Failed to execute job 323890 for task gmf_maestro_consulta (SSH operator error: exit status = 1; 1138332)
+[2024-12-03, 14:56:00 -05] {local_task_job_runner.py:234} INFO - Task exited with return code 1
+[2024-12-03, 14:56:00 -05] {taskinstance.py:3309} INFO - 0 downstream tasks scheduled from follow-on schedule check
