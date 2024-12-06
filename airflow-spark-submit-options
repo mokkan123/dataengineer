@@ -1,0 +1,56 @@
+from airflow import DAG
+from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
+from datetime import datetime
+
+# Default arguments for the DAG
+default_args = {
+    'owner': 'airflow',
+    'depends_on_past': False,
+    'start_date': datetime(2023, 1, 1),
+    'retries': 2,
+}
+
+# Define the DAG
+dag = DAG(
+    dag_id='spark_submit_example',
+    default_args=default_args,
+    schedule_interval='@daily',
+    catchup=False,
+)
+
+# SparkSubmitOperator task
+spark_submit_task = SparkSubmitOperator(
+    task_id='run_spark_job',
+    application='/path/to/your_spark_job.py',  # Path to your Spark application (Python, JAR, or Scala file)
+    conn_id='spark_default',  # Connection ID configured in Airflow
+    application_args=['arg1', 'arg2'],  # Arguments to pass to the Spark job
+    name='MySparkJob',  # Name of the Spark application
+    java_class='org.example.MyMainClass',  # For JAR applications, specify the main class
+    packages='org.apache.spark:spark-sql-kafka-0-10_2.12:3.3.0',  # Include dependencies (e.g., Kafka connector)
+    exclude_packages='org.apache.hadoop:hadoop-common',  # Exclude specific dependencies
+    driver_class_path='/path/to/driver/jars',  # Specify additional driver classpath if needed
+    verbose=True,  # Enable verbose logging for the Spark job
+    conf={
+        'spark.master': 'yarn',  # Use YARN as the cluster manager
+        'spark.deploy.mode': 'cluster',  # Run in cluster mode
+        'spark.executor.memory': '4G',  # Memory per executor
+        'spark.executor.cores': '4',  # Cores per executor
+        'spark.driver.memory': '4G',  # Memory for the driver
+        'spark.dynamicAllocation.enabled': 'true',  # Enable dynamic allocation
+        'spark.dynamicAllocation.minExecutors': '5',  # Minimum executors
+        'spark.dynamicAllocation.maxExecutors': '50',  # Maximum executors
+        'spark.sql.shuffle.partitions': '200',  # Number of shuffle partitions
+        'spark.shuffle.service.enabled': 'true',  # Required for dynamic allocation
+    },
+    jars='/path/to/dependencies/dependency1.jar,/path/to/dependencies/dependency2.jar',  # Include additional JARs
+    py_files='/path/to/dependencies/dependency.py',  # Include Python files
+    files='/path/to/local/file1,/path/to/local/file2',  # Include local files (e.g., config files)
+    executor_cores=4,  # Number of cores per executor
+    executor_memory='4G',  # Memory per executor
+    driver_memory='4G',  # Memory for the driver
+    num_executors=10,  # Number of executors (if dynamic allocation is disabled)
+    dag=dag,  # Associate the operator with the DAG
+)
+
+# Set task dependencies if needed
+spark_submit_task
