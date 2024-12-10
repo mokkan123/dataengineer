@@ -1,0 +1,18 @@
+shuffle records written: 38,606,460,718
+shuffle write time total (min, med, max )
+1.76 h (0 ms, 8.2 s, 1.2 m )
+records read: 21,786,264,076
+local bytes read total (min, med, max )
+355.9 GiB (0.0 B, 976.9 MiB, 1618.3 MiB )
+fetch wait time total (min, med, max )
+1.20 h (0 ms, 549 ms, 1.1 m )
+remote bytes read total (min, med, max )
+1453.7 GiB (0.0 B, 4.7 GiB, 5.3 GiB )
+local blocks read: 29,098
+remote blocks read: 118,845
+data size total (min, med, max )
+32.6 TiB (0.0 B, 65.2 GiB, 65.5 GiB )
+remote bytes read to disk total (min, med, max )
+0.0 B (0.0 B, 0.0 B, 0.0 B )
+shuffle bytes written total (min, med, max )
+3.1 TiB (0.0 B, 6.3 GiB, 6.3 GiB )
