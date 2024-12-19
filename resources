@@ -4,6 +4,70 @@ https://linuxconfig.org/how-to-allow-port-through-firewall-on-almalinux
 
 
 
+Data skew in Apache Spark occurs when data is unevenly distributed across partitions, leading to performance bottlenecks. Two primary strategies to address this issue are Salting and Adaptive Query Execution (AQE).
+
+1. Salting: Manual Redistribution of Skewed Data
+
+Salting involves adding a random value to skewed keys to distribute data more evenly across partitions. This manual technique requires identifying skewed keys and modifying them to balance the load.
+
+How It Works:
+
+Identify the Skewed Key: Determine which key(s) have a disproportionately large number of records.
+
+Add Salt to the Key: Append a random value (salt) to the skewed key.
+
+Join with Salted Keys: Match the salted keys in both datasets to redistribute the workload evenly.
+
+2. Adaptive Query Execution (AQE): Automatic Skew Handling
+
+AQE is a feature in Spark that automatically detects and optimizes skewed partitions during query execution. By enabling AQE, Spark can dynamically adjust execution plans to handle data skew without manual intervention.
+
+How AQE Handles Skew:
+
+Runtime Statistics Collection: Spark gathers data during the shuffle stage to identify skewed partitions.
+
+Partition Adjustment: Based on the collected statistics, Spark splits large partitions into smaller sub-partitions or merges small ones to optimize performance.
+
+Comparison: Salting vs. AQE
+
+Feature	Salting	Adaptive Query Execution (AQE)
+Effort Required	High (manual implementation)	Low (configuration only)
+Applicability	Effective for known skewed keys	Handles both known and unknown skew
+Execution Adjustment	Creates extra partitions to balance load	Dynamically adjusts partitions at runtime
+Automation	No, manual identification and salting needed	Yes, automatic detection and optimization
+When to Use Each Method:
+
+Salting:
+
+When the skew pattern is well-known and predictable.
+For static data where skew is consistent over time.
+AQE:
+
+For dynamic workloads with unknown or unpredictable skew.
+When runtime optimization is required without changing the code.
+Mermaid Flowchart Code:
+
+To visualize the process of handling data skew in Spark using both methods, here's a Mermaid flowchart:
+
+mermaid
+Copy code
+flowchart TD
+    A[Start: Detect Data Skew] --> B{Is Skew Pattern Known?}
+    B -- Yes --> C[Apply Salting Technique]
+    C --> D[Identify Skewed Keys]
+    D --> E[Add Random Salt to Keys]
+    E --> F[Redistribute Data Across Partitions]
+    F --> G[Continue with Optimized Execution]
+    B -- No --> H[Enable Adaptive Query Execution]
+    H --> I[Set spark.sql.adaptive.enabled to true]
+    I --> J[Automatic Detection and Optimization]
+    J --> G[Continue with Optimized Execution]
+This flowchart illustrates the decision-making process for handling data skew in Spark, guiding users to choose between manual salting and enabling AQE based on the nature of the data skew.
+
+
+
+
+
 Data skew and memory spills are common challenges in Apache Spark that can significantly impact performance. Understanding these issues and implementing effective optimization strategies is crucial for efficient data processing. Below are five scenarios illustrating data skew, memory spills, and disk spills, along with optimization techniques and corresponding flowcharts for clarity.
 
 1. Scenario: Skewed Data During Join Operations
