@@ -1,0 +1,48 @@
+Here is a detailed flow chart and explanation to describe the process of running a Spark job via Airflow while leveraging data and resources located in a Hadoop cluster. The interaction involves several components, including Airflow, the Hadoop cluster, and the spark-submit process. Below is the Mermaid flow chart to represent this interaction.
+
+Mermaid Flow Chart
+mermaid
+Copy code
+flowchart TD
+    A[Airflow DAG Trigger] -->|Triggers Task| B[Airflow Operator (SparkSubmitOperator)]
+    B -->|Submits Job| C[Spark-Submit Command]
+    C -->|Connects| D[YARN Resource Manager / Hadoop Cluster]
+    D -->|Allocates Resources| E[Cluster Manager (e.g., YARN or Standalone Mode)]
+    E -->|Spawns Executors| F[Spark Executors]
+    F -->|Processes Data| G[HDFS Data Storage]
+    F -->|Updates Status| H[Spark Driver]
+    H -->|Sends Logs| I[Airflow Logs]
+    H -->|Finalizes Job| J[Airflow Task Completion]
+Explanation of Components
+Airflow DAG Trigger:
+
+A DAG in Airflow triggers the task to submit a Spark job. This step typically uses the SparkSubmitOperator.
+SparkSubmitOperator:
+
+The operator is configured to use the spark-submit command with appropriate configurations such as the application JAR/py file, resource allocation (e.g., memory, CPU), and dependencies.
+Spark-Submit Command:
+
+This command connects to the Hadoop/YARN cluster, passing job details to the Resource Manager.
+YARN Resource Manager:
+
+Allocates cluster resources for the job by coordinating with the cluster nodes (Hadoop cluster).
+Cluster Manager:
+
+In the case of YARN, it spawns Spark Executors on worker nodes.
+Spark Executors:
+
+Executors perform the actual computation by processing data from HDFS or other Hadoop-compatible storage systems.
+HDFS:
+
+Data is read from and written back to HDFS as part of the Spark job.
+Spark Driver:
+
+Orchestrates the execution, tracks task progress, and reports job status.
+Airflow Logs:
+
+Logs the execution details and any errors, making them accessible through the Airflow UI.
+Task Completion:
+
+Once the Spark job is complete, Airflow marks the task as completed in the DAG execution timeline.
+This architecture ensures a seamless interaction between Airflow, Spark, and Hadoop resources, automating the workflow and monitoring progress.
+
