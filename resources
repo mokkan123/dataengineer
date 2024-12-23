@@ -3,6 +3,7 @@ https://medium.com/@harsh11csb/mastering-spark-jobs-demystifying-task-division-e
 https://linuxconfig.org/how-to-allow-port-through-firewall-on-almalinux
 
 
+hadoop fs -ls -R /user/data | grep "^d" | wc -l
 
 
 Processing a 4 TB dataset on a 5-node Spark cluster with 800 cores and 3 TB of memory requires careful configuration to optimize performance. Implementing dynamic executor allocation and fine-tuning executor settings are crucial steps in this process.
