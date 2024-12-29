@@ -1,0 +1,76 @@
+This configuration defines a high-availability distributed system for big data processing. The setup integrates Hadoop components, Spark for distributed data processing, and Airflow for workflow orchestration. Here's a detailed summary of the components and their interactions:
+
+Cluster Components
+Zookeeper Cluster:
+
+Consists of three nodes: ZK1 (zmn01), ZK2 (zmn02), and ZK3 (zmn03).
+Manages distributed coordination and synchronization between components.
+Provides failover support for NameNode and Resource Managers.
+Journal Node Cluster:
+
+Contains three nodes: JN1 (zmn01), JN2 (zmn02), and JN3 (zmn03).
+Facilitates shared edits for the Active and Standby NameNodes to maintain consistency in the HDFS metadata.
+NameNode Cluster:
+
+Two nodes are configured:
+Active Node: NN1 (hmn01).
+Standby Node: NN2 (hmn02).
+Ensures HDFS high availability with automatic failover using Zookeeper and JournalNodes.
+YARN Cluster:
+
+Resource Managers:
+RM1 (hmn01) - Active Resource Manager.
+RM2 (hmn02) - Standby Resource Manager.
+Manages job scheduling and cluster resource allocation.
+Data Nodes:
+
+Six nodes (DN1 to DN6) host the actual HDFS data blocks and handle data storage and retrieval.
+Integrated with the NameNodes for block storage and replication.
+Yarn Compute Nodes:
+
+Six nodes (CN1 to CN6) run MapReduce and YARN applications for distributed computation.
+Spark Master Nodes:
+
+Three Spark Master Nodes (SM1, SM2, SM3).
+Handle job submission, resource allocation, and distributed execution using YARN.
+Airflow Master Node:
+
+A single Airflow Master Node (AMN) at amn03.
+Orchestrates Spark jobs and other workflows by coordinating with Spark Master nodes.
+Key Interactions
+NameNode and Journal Nodes:
+
+NN1 (Active NameNode) writes metadata to JN1, JN2, and JN3.
+NN2 (Standby NameNode) reads metadata from the JournalNodes to stay synchronized.
+Zookeeper Coordination:
+
+Journal Nodes (JN1, JN2, JN3) use Zookeeper (ZK1, ZK2, ZK3) for coordination.
+Resource Managers and Spark Masters also communicate with Zookeeper for failover and cluster management.
+Resource and Compute Management:
+
+RM1 and RM2 manage compute nodes (CN1 to CN6) for YARN jobs.
+Spark Masters (SM1, SM2, SM3) connect to Resource Managers to allocate resources for Spark jobs.
+Airflow Orchestration:
+
+Airflow Master Node (AMN) orchestrates workflows by submitting Spark jobs to Spark Master Nodes (SM1, SM2, SM3).
+Data Flow:
+
+NameNodes (NN1, NN2) manage data flow to and from Data Nodes (DN1 to DN6).
+Spark Masters exchange data with the NameNodes during job execution.
+Spark and Airflow Integration:
+
+Spark Masters submit results and metadata back to Airflow for workflow continuation.
+AMN ensures job orchestration and monitoring.
+Visualization Features
+Component Colors:
+
+Airflow Master Node: Highlighted in green (#00C853) for emphasis.
+Yarn Compute Nodes: Styled with green borders.
+YARN Cluster: Styled with a white background for differentiation.
+Arrows and Flow:
+
+Arrows depict relationships like data flow, job submission, coordination, and failover.
+Cluster Titles:
+
+Cluster groupings (e.g., Zookeeper Cluster, Journal Node Cluster) use blue titles (#0000ff) with bold and larger fonts for clarity.
+This setup ensures high availability, efficient resource management, and orchestration of workflows in a distributed environment, combining Hadoop, Spark, and Airflow components.
