@@ -1,0 +1,9 @@
+Cluster Spark Performance Issues
+
+Analysis of SPARK UI and log files indicates that most performance issues arise during join operations, which trigger data shuffling across the cluster. This process frequently results in skewed data distribution and memory/disk-spilling instances.
+
+I have created the flowchart and troubleshooting steps in the following wiki pages with evidence. You can optimize the spark-submit parameters to get better results, as well as use other techniques.
+
+OneDev Cluster is configured and operating effectively, but few changes are required for job execution and authorization.
+
+I have created documentation that includes cluster details and test cases; you can review it on the following Wiki pages.
