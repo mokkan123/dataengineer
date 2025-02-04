@@ -1,0 +1,10 @@
+We can assist with implementing password encryption for your request. However, we require some validation regarding the Druid configuration file before proceeding.
+
+Could you confirm the location of this file?
+
+Is it stored locally on the OS, or
+Is it managed within HDFS?
+Additionally, based on our review of the Apache Druid documentation, we would like to verify whether your requirement specifically pertains to druid.metadata.storage.connector.password as outlined here:
+🔗 Druid Password Provider Documentation
+
+If this is the case, we will proceed with developing a custom PasswordProvider using Azure Key Vault or HashiCorp Vault. However, we have not yet tested this integration and will need to validate its functionality before full deployment.
