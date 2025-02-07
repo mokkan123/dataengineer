@@ -1,0 +1,93 @@
+Validate That Raw Data Stored in DataNodes is Encrypted
+HDFS DataNodes store only encrypted blocks. To confirm this, locate the raw block files on a DataNode and inspect them.
+
+📌 Step 1: Find the Block ID for the File
+
+hdfs fsck /secure_zone/sensitive-data.txt -files -blocks
+✅ Example Output
+
+/secure_zone/sensitive-data.txt: 
+  Under replicated BP-12345-DataNode-5678:blk_1073741825_1001 len=1024
+🔹 The block ID is blk_1073741825_1001.
+
+📌 Step 2: Locate the Raw Block File on the DataNode
+SSH into a DataNode and find the block file:
+
+
+find / -name "blk_1073741825*"
+✅ Example Output
+
+/hdfs/data/dn/current/BP-12345-DataNode-5678/current/finalized/subdir0/subdir1/blk_1073741825
+This confirms that the raw block exists.
+
+📌 Step 3: Inspect the Block Data
+To confirm that the block is encrypted, try reading it:
+
+
+cat /hdfs/data/dn/current/BP-12345-DataNode-5678/current/finalized/subdir0/subdir1/blk_1073741825
+❌ Expected Output (Encrypted Data)
+
+
+0L^tHn$y*@!G#fs@^T6Z...
+✅ If the output is unreadable (random characters), the data is encrypted.
+
+❌ Unexpected Output (Unencrypted Data)
+
+❌ If the original plaintext data is visible, encryption is NOT working properly.
+
+
+
+Key Uses of the .reserved Folder
+1️⃣ Accessing Raw Encrypted Data (/.reserved/raw)
+Used to bypass automatic decryption and view raw encrypted data inside an HDFS Encryption Zone.
+Only HDFS superusers (e.g., root, hdfs admin) can access this folder.
+📌 Example: Viewing Encrypted Data in an Encryption Zone
+
+hdfs dfs -cat /.reserved/raw/secure_zone/sensitive-data.txt
+✅ Expected Output (Encrypted Data):
+
+
+0L^tHn$y*@!G#fs@^T6Z...
+🔹 This confirms that HDFS is storing encrypted data instead of plaintext.
+
+
+
+
+How KMS Server ACL Controls Access to HDFS Encryption Zone Files and Folders
+Hadoop Key Management Server (KMS) Access Control List (ACL) is responsible for controlling access to encryption keys, which in turn determines who can read, write, or manage encrypted data in HDFS Encryption Zones.
+
+KMS ACLs do NOT directly control HDFS folders or files; instead, they control who can access the encryption keys, thereby indirectly determining who can read/write encrypted data.
+
+
+<configuration>
+
+    <!-- Allow only 'root' to create encryption keys -->
+    <property>
+        <name>hadoop.kms.acl.CREATE</name>
+        <value>root</value>
+    </property>
+
+    <!-- Allow only 'admin' to delete encryption keys -->
+    <property>
+        <name>hadoop.kms.acl.DELETE</name>
+        <value>admin</value>
+    </property>
+
+    <!-- Allow 'user1' and 'user2' to use the encryption key -->
+    <property>
+        <name>hadoop.kms.acl.my-secure-key.GENERATE_EEK</name>
+        <value>user1,user2</value>
+    </property>
+
+    <!-- Allow only 'finance_group' to decrypt keys -->
+    <property>
+        <name>hadoop.kms.acl.my-secure-key.DECRYPT_EEK</name>
+        <value>@finance_group</value>
+    </property>
+
+</configuration>
+
+
+
+
+
