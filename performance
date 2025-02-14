@@ -1,0 +1,6 @@
+🔹 Impact of Transparent Data Encryption (TDE) on HDFS Performance
+Transparent Data Encryption (TDE) introduces some performance overhead, but it remains manageable and does not significantly impact overall system efficiency.
+
+✔ Write operations experience a greater performance impact than reads since encryption is performed at the client side before data is stored in HDFS.
+✔ Read operations are less affected, as decryption occurs only when authorized users or applications retrieve the data.
+✔ In summary, read operations maintain faster data retrieval compared to write-intensive tasks, making TDE well-suited for environments with performance SLAs focused on data access. 🚀
