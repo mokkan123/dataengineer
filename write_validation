@@ -1,0 +1,158 @@
+Validating Data Encryption in an HDFS Encryption Zone
+To confirm that data in /secure_zone/myfile.txt is encrypted, follow these validation steps:
+
+✔ Check if /secure_zone is an Encryption Zone (EZ)
+✔ Verify that the file is encrypted in HDFS metadata
+✔ Check raw DataNode blocks to confirm encryption
+✔ Test unauthorized access to enforce security
+
+📌 Step 1: Verify That /secure_zone Is an Encryption Zone
+Run the following command:
+
+bash
+Copy
+Edit
+hdfs crypto -listZones
+✅ Expected Output:
+
+bash
+Copy
+Edit
+/secure_zone my-secure-key
+✔ Confirms that /secure_zone is encrypted using my-secure-key.
+
+📌 Step 2: Check File Metadata to Confirm Encryption
+Run:
+
+bash
+Copy
+Edit
+hdfs dfs -getfacl /secure_zone/myfile.txt
+✅ Expected Output:
+
+yaml
+Copy
+Edit
+# file: /secure_zone/myfile.txt
+encryption zone: /secure_zone
+encryption key: my-secure-key
+✔ Confirms that myfile.txt is encrypted inside /secure_zone.
+
+📌 Step 3: Try Accessing the File as an Unauthorized User
+Attempt to read the file as an unauthorized user:
+
+bash
+Copy
+Edit
+sudo -u unauthorized_user hdfs dfs -cat /secure_zone/myfile.txt
+❌ Expected Output (If Unauthorized):
+
+pgsql
+Copy
+Edit
+Permission denied: User unauthorized_user does not have access to encryption key.
+✔ Confirms that only authorized users can access the encrypted data.
+
+📌 Step 4: Locate Raw Data Blocks in HDFS DataNodes
+To ensure that HDFS DataNodes store only encrypted data, find the raw block files.
+
+1️⃣ Find the Block ID of the File
+bash
+Copy
+Edit
+hdfs fsck /secure_zone/myfile.txt -files -blocks
+✅ Example Output:
+
+bash
+Copy
+Edit
+/secure_zone/myfile.txt: 
+  Under replicated BP-12345-DataNode-5678:blk_1073741825_1001 len=1024
+🔹 Block ID: blk_1073741825_1001
+
+2️⃣ Locate the Block on a DataNode
+SSH into a DataNode and find the block file:
+
+bash
+Copy
+Edit
+find / -name "blk_1073741825*"
+✅ Example Output:
+
+swift
+Copy
+Edit
+/hdfs/data/dn/current/BP-12345-DataNode-5678/current/finalized/subdir0/subdir1/blk_1073741825
+✔ Confirms that the block is stored on the DataNode.
+
+3️⃣ Inspect Raw Data to Confirm Encryption
+To check if the raw block is encrypted, try reading it:
+
+bash
+Copy
+Edit
+cat /hdfs/data/dn/current/BP-12345-DataNode-5678/current/finalized/subdir0/subdir1/blk_1073741825
+❌ Expected Output (Encrypted Data)
+
+bash
+Copy
+Edit
+0L^tHn$y*@!G#fs@^T6Z...
+✔ Confirms that the DataNode is storing only encrypted data.
+
+❌ Unexpected Output (Unencrypted Data)
+
+csharp
+Copy
+Edit
+This is my confidential file content.
+⚠ If plaintext data appears, encryption is NOT working correctly.
+
+📌 Step 5: Try Accessing Raw Data Using the .reserved/raw Path
+HDFS provides a hidden .reserved/raw path that allows accessing raw encrypted data.
+
+Run:
+
+bash
+Copy
+Edit
+hdfs dfs -cat /.reserved/raw/secure_zone/myfile.txt
+❌ Expected Output (If Accessing Raw Encrypted Data):
+
+bash
+Copy
+Edit
+0L^tHn$y*@!G#fs@^T6Z...
+✔ Confirms that encryption is applied correctly.
+
+📌 Step 6: Validate Key Access Logs in Ranger KMS
+If Ranger KMS is enabled, check the audit logs to track key access:
+
+bash
+Copy
+Edit
+sudo tail -f /var/log/ranger/kms/audit.log
+✅ Example Log Output:
+
+pgsql
+Copy
+Edit
+User 'hdfs' requested decryption for key 'my-secure-key'
+User 'unauthorized_user' access DENIED for key 'my-secure-key'
+✔ Confirms that key access is being enforced correctly.
+
+🔹 Summary of Validation Steps
+Step	Command	Expected Outcome
+1️⃣ Check Encryption Zone	hdfs crypto -listZones	Shows /secure_zone as an Encryption Zone.
+2️⃣ Verify File Metadata	hdfs dfs -getfacl /secure_zone/myfile.txt	Confirms encryption is applied.
+3️⃣ Test Unauthorized Access	sudo -u unauthorized_user hdfs dfs -cat /secure_zone/myfile.txt	Access denied.
+4️⃣ Locate Raw Data Blocks	hdfs fsck /secure_zone/myfile.txt -files -blocks	Identifies HDFS block ID.
+5️⃣ Inspect DataNode Block	cat /hdfs/data/dn/.../blk_*	Encrypted data only.
+6️⃣ Access Raw Encrypted Data	hdfs dfs -cat /.reserved/raw/secure_zone/myfile.txt	Shows encrypted output.
+7️⃣ Monitor Key Access in Ranger KMS	tail -f /var/log/ranger/kms/audit.log	Tracks decryption requests.
+🔹 Conclusion
+✔ HDFS Encryption Zones ensure that data remains encrypted at rest.
+✔ DataNodes store only encrypted blocks, preventing unauthorized access.
+✔ Only authorized users can decrypt and access the file via KMS.
+✔ Using .reserved/raw/ confirms that data is encrypted at the filesystem level.
+✔ Audit logs in Ranger KMS provide visibility into key usage and access violations.
