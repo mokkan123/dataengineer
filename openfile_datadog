@@ -1,0 +1,108 @@
+How to Find Which Process is Using the Most Open File Descriptors in Datadog
+As a Datadog Expert, here’s how you can leverage existing Datadog features to identify processes consuming the most open file descriptors.
+
+Step 1: Enable Process Monitoring in Datadog
+To monitor open file descriptors per process, ensure Live Process Monitoring is enabled.
+
+Verify if Process Monitoring is Already Enabled
+Run the following command to check if process monitoring is active:
+
+sh
+Copy
+Edit
+sudo datadog-agent status | grep "process"
+If it’s not enabled, follow these steps:
+
+Enable Process Monitoring
+Edit the Datadog Agent config file:
+sh
+Copy
+Edit
+sudo nano /etc/datadog-agent/datadog.yaml
+Find the process_config section and modify it:
+yaml
+Copy
+Edit
+process_config:
+  enabled: "true"
+  process_collection: "true"
+Restart the Datadog Agent:
+sh
+Copy
+Edit
+sudo systemctl restart datadog-agent
+Step 2: View Per-Process Open File Descriptor Usage in Datadog UI
+Go to Datadog UI:
+
+Navigate to Live Processes → Datadog Live Process Monitoring.
+Filter for Open File Descriptors:
+
+In the search bar, enter:
+text
+Copy
+Edit
+process.open_file_descriptors
+This will show processes sorted by the number of open file descriptors.
+Sort by "Open File Descriptors":
+
+Click on the process.open_file_descriptors column.
+Identify processes with high usage.
+Drill Down into a Specific Process:
+
+Click on a process to see:
+Command line arguments (process.command)
+Memory & CPU usage
+Open file descriptor trends over time
+Step 3: Create a Dashboard to Continuously Track Open File Descriptors
+You can create a Datadog Dashboard to visualize processes with high open file descriptor usage.
+
+Add a "Top List" Widget
+Go to Datadog → Dashboards → New Dashboard.
+Click "Add Widget" → Select "Top List".
+Use this query:
+text
+Copy
+Edit
+avg:process.open_file_descriptors{*} by {process_name}
+Title: "Processes with Most Open File Descriptors"
+Save the Widget.
+Step 4: Set Up an Alert for High Open File Descriptor Usage
+To prevent file descriptor exhaustion, create a Datadog monitor.
+
+Create a New Monitor
+Go to "Monitors" → "New Monitor".
+Select "Metric Monitor".
+Enter the query:
+text
+Copy
+Edit
+process.open_file_descriptors{*} by {process_name}
+Set Alert Conditions:
+Warning: > 5000 open file descriptors
+Critical: > 8000 open file descriptors
+Configure Notifications (Slack, Email, PagerDuty, etc.).
+Save and Activate.
+Step 5: Use Log Management for Further Investigation (Optional)
+If you want detailed logging of which files a process has open:
+
+Enable Datadog Log Collection
+
+In datadog.yaml:
+yaml
+Copy
+Edit
+logs_enabled: true
+Restart the agent:
+sh
+Copy
+Edit
+sudo systemctl restart datadog-agent
+Filter Logs for High Open File Usage
+
+Go to Datadog → Logs.
+Search:
+text
+Copy
+Edit
+process_name:your_app AND process.open_file_descriptors:*
+Identify if a specific file is causing excessive usage.
