@@ -1,0 +1,10 @@
+init_config:
+
+instances:
+  - name: "high_open_files_monitor"
+    search_string: ["nginx", "apache2", "java"]  # Add target processes here
+    exact_match: false
+    cpu_check_interval: 15   # Check CPU every 15 seconds
+    mem_check_interval: 15   # Check Memory every 15 seconds
+    open_file_check_interval: 10   # Check open files every 10 seconds
+    collect_file_descriptor_count: true   # Enable open file tracking
