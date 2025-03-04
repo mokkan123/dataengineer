@@ -5,3 +5,8 @@ instances:
       - ssh
       - sshd
     try_sudo: true
+
+
+
+avg:process.open_file_descriptors{host:your-hostname}
+
