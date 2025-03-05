@@ -10,3 +10,6 @@ instances:
 
 avg:process.open_file_descriptors{host:your-hostname}
 
+
+lsof -n | awk '{print $2}' | sort | uniq -c | sort -nr | head -10 | awk '{print $2}' | xargs -I {} ps -p {} -o pid,cmd
+
