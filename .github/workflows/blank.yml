@@ -1,0 +1,25 @@
+name: Run Script on Self-Hosted Runner
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  run-script:
+    name: Run Shell Script on Self-Hosted Runner
+    runs-on: [self-hosted, alma]  # Match runner labels
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run a simple bash script
+        run: |
+          echo "🏁 Running on self-hosted runner"
+          echo "📅 Current date: $(date)"
+          echo "📂 Listing directory:"
+          ls -la
+
+      - name: Run a script file
+        run: ./scripts/hello.sh
+        shell: bash
+
