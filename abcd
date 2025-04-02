@@ -1,0 +1,13 @@
+Thank you for helping us out with our tasks.
+
+As discussed yesterday, we need to store our passwords in the vault.
+
+As per yesterday's meeting, the DevOps team needs to know the valid reason why Lab servers want to store the password in the vault. Since this is an old subscription, they may not support it. If I'm missing something,  please clarify.
+
+We want the passwords to be in the vault because we have an access control cluster, which is a secured cluster. We don't want to keep the clear text password; to do that, we need to test it in the lab environment.
+
+Also, who will support us if we want to use the enterprise Vault solution? Please provide the directions.
+
+What information or clarification from our end to proceed?
+
+I appreciate your support.
