@@ -1,0 +1,21 @@
+Step 2: Enable the HashiCorp Vault KMS Plugin in MariaDB
+In your MariaDB config file (usually /etc/my.cnf.d/encryption.cnf):
+
+ini
+Copy
+Edit
+[mysqld]
+plugin_load_add = key_management_hashicorp
+
+# Vault plugin configuration
+key_management_hashicorp_url = http://127.0.0.1:8200
+key_management_hashicorp_token = root
+key_management_hashicorp_secret_mount = secret
+key_management_hashicorp_secret_path = mariadb
+key_management_hashicorp_kv_version = 2
+
+# Encryption settings
+innodb_encrypt_tables = ON
+innodb_encrypt_log = ON
+innodb_encrypt_temporary_tables = ON
+encrypt_tmp_files = ON
