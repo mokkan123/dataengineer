@@ -1,0 +1,157 @@
+MariaDB + HashiCorp Vault: Encryption at Rest Integration Guide
+
+Overview
+
+This document provides step-by-step instructions for integrating MariaDB with HashiCorp Vault to enable transparent data encryption at rest. This setup ensures that encryption keys are securely managed by Vault while MariaDB uses those keys to encrypt tables, logs, and temporary files.
+
+1. Prerequisites
+
+MariaDB Enterprise Server (10.5 or higher)
+
+HashiCorp Vault (1.7+)
+
+AlmaLinux 8 (or compatible Linux distribution)
+
+Root/sudo access
+
+2. Configure HashiCorp Vault
+
+2.1 Install Vault (on AlmaLinux 8)
+
+sudo dnf install -y yum-utils
+sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo
+sudo dnf install vault
+
+2.2 Start Vault (Dev Mode for testing)
+
+vault server -dev -dev-root-token-id=root
+
+2.3 Enable KV Secrets Engine
+
+export VAULT_ADDR='http://127.0.0.1:8200'
+vault login root
+vault secrets enable -path=secret kv
+
+2.4 Add MariaDB Keyfile
+
+vault kv put secret/mariadb keyfile="1;AES;256;abcdef0123456789abcdef0123456789"
+
+3. Configure MariaDB
+
+3.1 Install and Configure MariaDB
+
+Ensure MariaDB is installed. Then create a configuration file:
+
+sudo vi /etc/my.cnf.d/encryption.cnf
+
+Add:
+
+[mysqld]
+plugin_load_add = file_key_management
+file_key_management_filename = /etc/mysql/encryption/keyfile
+file_key_management_filekey = FILE:/etc/mysql/encryption/keyfile
+file_key_management_encryption_algorithm = aes_cbc
+
+innodb_encrypt_tables = ON
+innodb_encrypt_log = ON
+innodb_encrypt_temporary_tables = ON
+encrypt_tmp_files = ON
+
+3.2 Fetch Key from Vault and Write to File
+
+Create the script:
+
+sudo vi /usr/local/bin/fetch_mariadb_key.sh
+
+#!/bin/bash
+export VAULT_ADDR='http://127.0.0.1:8200'
+export VAULT_TOKEN='root'
+vault kv get -field=keyfile secret/mariadb > /etc/mysql/encryption/keyfile
+chown mysql:mysql /etc/mysql/encryption/keyfile
+chmod 400 /etc/mysql/encryption/keyfile
+
+Make it executable:
+
+chmod +x /usr/local/bin/fetch_mariadb_key.sh
+
+Run it once:
+
+sudo /usr/local/bin/fetch_mariadb_key.sh
+
+3.3 Restart MariaDB
+
+sudo systemctl restart mariadb
+
+4. Create Encrypted Tables
+
+4.1 Example SQL
+
+CREATE DATABASE secure_data;
+USE secure_data;
+
+CREATE TABLE confidential_clients (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255),
+  ssn VARCHAR(11)
+) ENCRYPTED=YES ENCRYPTION_KEY_ID=1;
+
+4.2 Verify Encryption
+
+SELECT * FROM information_schema.INNODB_TABLESPACES_ENCRYPTION;
+
+5. Rotate Encryption Keys (Optional)
+
+5.1 Update Keyfile in Vault
+
+vault kv put secret/mariadb keyfile="1;AES;256;oldkeyhere\n2;AES;256;newkeyhere"
+
+5.2 Re-encrypt Table with New Key
+
+ALTER TABLE secure_data.confidential_clients ENCRYPTED=YES ENCRYPTION_KEY_ID=2;
+
+6. Backup and Restore (Encrypted Data)
+
+Use mariabackup or logical backups:
+
+mariabackup --backup --target-dir=/backup/secure --user=root --password=yourpass
+
+mariabackup --prepare --target-dir=/backup/secure
+mariabackup --copy-back --target-dir=/backup/secure
+chown -R mysql:mysql /var/lib/mysql
+
+Ensure the encryption keyfile is restored first from Vault.
+
+7. Troubleshooting
+
+Verify keyfile path and permissions (chmod 400, owned by mysql:mysql)
+
+Confirm MariaDB can read the key: SHOW PLUGINS LIKE 'file_key_management';
+
+Check for errors in /var/log/mariadb/mariadb.log
+
+Confirm Vault is running and accessible
+
+8. Security Best Practices
+
+Use Vault Agent and AppRole in production
+
+Enable audit logging in Vault
+
+Rotate encryption keys periodically
+
+Encrypt only sensitive tables if performance is a concern
+
+Summary
+
+By following this guide, you’ve:
+
+Configured Vault as a key management system
+
+Integrated MariaDB with encrypted tables using Vault
+
+Enabled encryption for logs and temporary files
+
+Implemented optional key rotation and secure backups
+
+MariaDB + Vault provides a scalable, secure, and compliant way to protect data at rest.
+
