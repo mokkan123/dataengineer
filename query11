@@ -1,0 +1,3 @@
+SELECT
+  SUBSTR(order_time_string, 1, 26) AS simulated_microsecond_timestamp
+FROM your_table
