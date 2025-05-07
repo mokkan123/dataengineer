@@ -1,0 +1,1 @@
+hdfs dfs -ls -R / | awk '$5 > 0 && $5 < 134217728 {print $5, $8}' > small_files_report.txt
