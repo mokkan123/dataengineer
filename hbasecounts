@@ -1,0 +1,1 @@
+grep "FSNamesystem.audit" hadoop-hdfs-namenode-*.log | grep "ugi=hbase" | awk -F "cmd=" '{print $2}' | awk '{print $1}' | sort | uniq -c | sort -nr
