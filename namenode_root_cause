@@ -1,0 +1,3 @@
+According to the GC logs, we noticed a slight increase in pause time, which reached a maximum of 133 milliseconds. The change from 90 milliseconds to 130 milliseconds is minor and not considered significant. Therefore, it can be safely disregarded at this level.
+
+Attached the Grafana screenshot and the GC log for further details.
