@@ -1,3 +1,19 @@
+Namenode went down twice in a month trying find the root cause.
+
+Servers had enough resources to run services during the crash.
+
+HBase Job
+
+According to the DataDog evidence, there was a heavy load from an HBase job that was running. While it is unclear if this was the cause of the issue, it is important to note that HBase can generate millions of small HFiles, particularly after compaction or snapshotting. Each file and block consumes JVM memory as Java objects.
+
+HBase generates numerous small write operations, which quickly fill up the edits in progress. 
+
+We need to validate the edit log and determine how many HFiles were created or how rapidly the edit in progress has grown.
+
+
+Garbage Collection
+
 According to the GC logs, we noticed a slight increase in pause time, which reached a maximum of 133 milliseconds. The change from 90 milliseconds to 130 milliseconds is minor and not considered significant. Therefore, it can be safely disregarded at this level.
 
 Attached the Grafana screenshot and the GC log for further details.
+
