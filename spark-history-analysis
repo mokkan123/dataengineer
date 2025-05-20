@@ -1,0 +1,26 @@
+Root Cause Analysis (w9410/w9411)
+Upon analyzing the NameNode crash on hosts w9410 and w9411, we can eliminate garbage collection (GC) as a contributing factor. Logs confirm there were no full GC events or JVM pause times during the incident.
+
+HBase applications were also ruled out as a cause. There were no errors or suspicious activities observed on the HBase Master or related region servers at the time of failure.
+
+However, prior to the crash, a high volume of metadata operations was recorded in the NameNode logs under hdfs.StateChange.
+
+The hdfs.StateChange logger tracks critical HDFS metadata operations such as create, delete, rename, setPermission, setReplication, append, completeFile, and fsync/hsync. These actions reflect active file system modifications and require coordination across NameNode and JournalNodes.
+
+Specifically, the logs show that fsync operations were triggered during active write activity to the Spark History Server event log directory in HDFS. The crash on May 5 / May 15 coincided with a spike in these operations, suggesting that the NameNode was under pressure due to frequent metadata flushes initiated by Spark job logging.
+
+Proposed Solution: Spark I/O Tuning
+To reduce write and read load on the NameNode caused by Spark event logging:
+
+Write Operation Tuning (Driver-Side)
+bash
+Copy
+Edit
+--conf spark.eventLog.buffer.kb=1024       # Increase buffer size (Default: 100 KB)
+--conf spark.eventLog.compress=true        # Enable compression (Default: false)
+Read Operation Tuning (History Server)
+bash
+Copy
+Edit
+--conf spark.history.fs.update.interval=30s   # Reduce polling frequency (Default: 10s)
+These changes will reduce the frequency of fsync calls to the NameNode and lower the polling pressure from the Spark History Server, improving NameNode stability under high job churn.
