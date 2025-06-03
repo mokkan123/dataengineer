@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Directory to store jstack outputs
+DUMP_DIR="/var/log/hadoop/jstack_dumps"
+mkdir -p "$DUMP_DIR"
+
+# Get NameNode PID
+PID=$(jps | grep NameNode | awk '{print $1}')
+
+# Timestamp
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+
+# Output file
+OUTFILE="$DUMP_DIR/jstack_namenode_$TIMESTAMP.txt"
+
+# Run jstack
+if [ -n "$PID" ]; then
+    jstack "$PID" > "$OUTFILE"
+    echo "Collected jstack for NameNode PID $PID at $TIMESTAMP"
+else
+    echo "NameNode process not found at $TIMESTAMP"
+fi
