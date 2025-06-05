@@ -1,0 +1,71 @@
+HDFS Namenode Slowness: Root Cause Analysis & Recommendations
+📅 Issue Summary
+We have been observing HDFS slowness for the past few weeks/months. After extensive review, several contributing factors have been identified, particularly around disk I/O latency, checkpointing behavior, and job-induced load on the NameNode.
+
+🔍 Identified Root Causes
+1. High Disk I/O Wait on NameNode
+Observed Wait Time: ~500–1200 ms
+
+Impact: Prolonged I/O wait impacts fsimage write, edit log sync, and RPC responsiveness.
+
+Action: Infrastructure limitation acknowledged. No further action possible at this time — to be treated as a baseline.
+
+✅ Actionable Solutions to Reduce Namenode Load
+A. Reduce Unnecessary Workloads
+Observation: Tools like Dremio, frequent Spark jobs, or metadata-heavy operations (e.g., HBase scans, file listings) contribute to load.
+
+Recommendation: Audit and suppress non-critical or redundant jobs to reduce metadata traffic and RPC queue backlog.
+
+B. Increase Spark History Server Timeouts
+Problem: Aggressive polling by Spark History Server creates frequent fsync and .inprogress writes to HDFS.
+
+Recommended Settings:
+
+bash
+Copy
+Edit
+spark.history.fs.update.interval=60s     # default is 10s
+spark.eventLog.buffer.kb=2048            # default is 100 KB
+spark.eventLog.compress=true             # reduce write pressure
+C. Enable fsimage Compression
+Benefit: Reduces size of fsimage being transferred to the NameNode.
+
+Setting:
+
+xml
+Copy
+Edit
+<property>
+  <name>dfs.image.compress</name>
+  <value>true</value>
+</property>
+🧾 Checkpointing Behavior Review
+❗ Issue: Frequent Checkpoints (every ~6 minutes)
+Expected: Checkpoints should happen every 3600 seconds (1 hour) or after large transaction counts.
+
+Observed: Occurs every 6 minutes, likely due to timeout/ack failures, even though image is processed successfully.
+
+🔧 Current Relevant Settings
+Parameter	Description	Default	Observed Behavior
+dfs.namenode.checkpoint.period	Minimum time between checkpoints	3600s	Not respected due to retries
+dfs.namenode.checkpoint.check.period	Interval to check if checkpoint is due	60s	Default
+dfs.image.transfer.timeout	Timeout for uploading fsimage	60s	Too low for current fsimage size
+
+✔ Recommendation:
+Increase timeout to accommodate slower disk/network:
+
+xml
+Copy
+Edit
+<property>
+  <name>dfs.image.transfer.timeout</name>
+  <value>300000</value> <!-- 5 minutes -->
+</property>
+🧠 Conclusion
+While disk I/O limitations cannot be mitigated, we recommend tuning Spark, checkpoint frequency, and transfer timeouts to reduce NameNode pressure. These improvements will:
+
+Reduce fsync calls and .inprogress write traffic.
+
+Prevent excessive checkpoint retries.
+
+Optimize edit log replay and memory utilization.
