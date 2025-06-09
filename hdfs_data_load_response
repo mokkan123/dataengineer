@@ -1,0 +1,60 @@
+Progress Summary
+Action Taken:
+
+Cleaned up unnecessary files and directories from HDFS.
+
+This reduced the FSImage size from 8.5 GB to 2.5 GB, decreasing:
+
+Memory footprint on NameNode.
+
+Time taken for checkpointing and startup.
+
+Pressure on GC during image load and transaction replay.
+
+Impact Observed:
+
+Noticeable performance improvement in NameNode responsiveness.
+
+Lower pause times during edits loading and FSImage processing.
+
+⚠️ Ongoing Challenges
+However, slowness still persists due to:
+
+🛠 Monitoring scripts (e.g., frequent hdfs dfs -count, du, getContentSummary) creating heavy RPC and metadata load.
+
+⚙️ External applications (e.g., Spark History Server, Dremio, etc.) accessing HDFS intensively and creating:
+
+Many fsync, completeFile, or getFileInfo calls.
+
+Long-held FSNamesystem locks and queue buildup.
+
+🔄 Next Steps
+Audit & Throttle Monitoring Jobs:
+
+Identify frequent HDFS metadata queries in scripts.
+
+Apply rate limiting or schedule non-peak execution.
+
+Application Tuning:
+
+For Spark History Server:
+
+Increase spark.history.fs.update.interval
+
+Use spark.eventLog.buffer.kb and spark.eventLog.compress=true
+
+For any long-running jobs, ensure proper logging and flush settings.
+
+Track FS Lock & RPC Metrics:
+
+Monitor FSLockQueueLength, RpcQueueLength, IPC Server Handler states.
+
+Use JMX, NameNode logs, or thread dumps to isolate heavy operations.
+
+Enable FSImage Compression (Optional):
+
+dfs.image.compress = true – may reduce disk and transfer time further.
+
+Long-Term:
+
+Evaluate use of HDFS federation or offload heavy workloads to a separate cluster if possible.
