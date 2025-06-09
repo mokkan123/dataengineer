@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Get the NameNode PID automatically via jps
+PID=$(jps | grep NameNode | awk '{print $1}')
+if [[ -z "$PID" ]]; then
+  echo "NameNode process not found!"
+  exit 1
+fi
+
+echo "NameNode PID: $PID"
+
+echo -e "\n🧠 Top 10 Threads by CPU usage (from top -H):"
+top -H -b -n 1 -p "$PID" | head -n 20
+
+echo -e "\n🔍 I/O Stats per Thread (PID: $PID):"
+echo "LWP_ID     READ_BYTES    WRITE_BYTES     COMMAND"
+for tid in $(ls /proc/$PID/task); do
+  RFILE="/proc/$PID/task/$tid/io"
+  if [[ -f "$RFILE" ]]; then
+    read_bytes=$(grep read_bytes "$RFILE" | awk '{print $2}')
+    write_bytes=$(grep write_bytes "$RFILE" | awk '{print $2}')
+    cmdline=$(cat /proc/$PID/task/$tid/comm)
+    printf "%-10s %-12s %-14s %s\n" "$tid" "$read_bytes" "$write_bytes" "$cmdline"
+  fi
+done | sort -k2 -nr | head -n 10
