@@ -1,0 +1,5 @@
+#!/bin/bash
+PID=$(jps | grep NameNode | awk '{print $1}')
+echo "NameNode PID: $PID"
+echo -e "\nActive LWP to Thread Map:"
+ps -eLf | awk -v pid="$PID" '$2 == pid { printf("LWP=%s CMD=%s %s %s %s\n", $4, $14, $15, $16, $17) }' | sort -n
