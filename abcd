@@ -1,2 +1,18 @@
 Thank you 
 curl http://<namenode>:50070/jmx?qry=Hadoop:service=NameNode,name=FSNamesystem
+
+Summary: Addressing HDFS Slowness – Root Causes and Action Items
+
+HDFS slowness was traced to multiple contributing factors, including an oversized FSImage, high disk I/O, and excessive job activity.
+
+Actions Taken:
+
+Reduced the FSImage size from 8.5 GB to 2.5 GB by cleaning up obsolete files in the /tmp directory.
+
+Identified frequent checkpoints occurring every 5 minutes due to high disk I/O delays preventing condition checks. Resolved by increasing the FSImage upload timeout between the Secondary and Primary NameNode, ensuring proper checkpoint intervals and reducing unnecessary disk writes.
+
+Collaborated with the application team to remove redundant or outdated jobs impacting NameNode performance.
+
+Identified a Datadog agent job executing hdfs dfs -count every 2 minutes. This has been temporarily disabled and will be rescheduled to run once daily.
+
+Continuous monitoring is ongoing via Ambari Metrics and Datadog to proactively detect and mitigate further performance spikes.
