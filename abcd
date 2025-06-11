@@ -1,1 +1,2 @@
 Thank you 
+curl http://<namenode>:50070/jmx?qry=Hadoop:service=NameNode,name=FSNamesystem
