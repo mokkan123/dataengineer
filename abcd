@@ -7,7 +7,7 @@ HDFS slowness was traced to multiple contributing factors, including an oversize
 
 Actions Taken:
 
-Reduced the FSImage size from 8.5 GB to 2.5 GB by cleaning up obsolete files in the /tmp directory.
+Reduced the FSImage size from 8.5 GB to 2.5 GB by cleaning up obsolete files in the HDFS /tmp directory.
 
 Identified frequent checkpoints occurring every 5 minutes due to high disk I/O delays preventing condition checks. Resolved by increasing the FSImage upload timeout between the Secondary and Primary NameNode, ensuring proper checkpoint intervals and reducing unnecessary disk writes.
 
@@ -16,3 +16,26 @@ Collaborated with the application team to remove redundant or outdated jobs impa
 Identified a Datadog agent job executing hdfs dfs -count every 2 minutes. This has been temporarily disabled and will be rescheduled to run once daily.
 
 Continuous monitoring is ongoing via Ambari Metrics and Datadog to proactively detect and mitigate further performance spikes.
+
+
+
+Planned Actions for PAT Environment – Addressing HDFS Slowness
+Following the successful performance optimizations in the Dev environment, we plan to implement the same improvements in the PAT environment to address potential HDFS slowness. Key contributing factors previously identified include an oversized FSImage, elevated disk I/O, and high job activity.
+
+Planned Actions for PAT:
+
+FSImage Optimization:
+Reduce the FSImage size by cleaning up obsolete or temporary files from the HDFS /tmp directory. The goal is to bring down the size significantly (e.g., from ~8.5 GB to ~2.5 GB as achieved in Dev).
+
+Checkpoint Configuration Tuning:
+Adjust the FSImage upload timeout between the Secondary and Primary NameNode to ensure proper checkpoint intervals. This prevents frequent checkpoints caused by disk I/O delays and eliminates redundant disk operations.
+
+Job Cleanup with Application Team:
+Coordinate with the application team to review and remove redundant or outdated jobs that may degrade NameNode performance.
+
+Agent Job Rescheduling:
+Identify and reschedule any monitoring or agent jobs (e.g., Datadog hdfs dfs -count) that currently run at high frequency. In Dev, this job was changed from running every 2 minutes to once per day.
+
+Ongoing Monitoring:
+Continue proactive performance tracking using Ambari Metrics and Datadog to detect and address any spikes or anomalies.
+
