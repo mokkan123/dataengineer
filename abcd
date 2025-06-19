@@ -30,6 +30,7 @@ Reduce the FSImage size by cleaning up obsolete or temporary files from the HDFS
 Checkpoint Configuration Tuning:
 Adjust the FSImage upload timeout between the Secondary and Primary NameNode to ensure proper checkpoint intervals. This prevents frequent checkpoints caused by disk I/O delays and eliminates redundant disk operations.
 
+
 Job Cleanup with Application Team:
 Coordinate with the application team to review and remove redundant or outdated jobs that may degrade NameNode performance.
 
@@ -43,3 +44,5 @@ Continue proactive performance tracking using Ambari Metrics and Datadog to dete
 
 We have implemented a fix in the PAT environment to reduce unnecessary load from the Datadog agent. As of now, the RPC lock queue length and thread wait times appear stable. The application team can proceed with running their queries. If any issues arise, please inform us. We will continue to monitor all critical metrics closely.
 
+
+We have created a Deny Ranger policy to prevent traversal through all directories, thereby avoiding unnecessary scanning. This will help the Datadog agent avoid scanning all folders and files, improving overall performance.
