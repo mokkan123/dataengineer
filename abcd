@@ -39,3 +39,7 @@ Identify and reschedule any monitoring or agent jobs (e.g., Datadog hdfs dfs -co
 Ongoing Monitoring:
 Continue proactive performance tracking using Ambari Metrics and Datadog to detect and address any spikes or anomalies.
 
+
+
+We have implemented a fix in the PAT environment to reduce unnecessary load from the Datadog agent. As of now, the RPC lock queue length and thread wait times appear stable. The application team can proceed with running their queries. If any issues arise, please inform us. We will continue to monitor all critical metrics closely.
+
