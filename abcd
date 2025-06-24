@@ -46,3 +46,7 @@ We have implemented a fix in the PAT environment to reduce unnecessary load from
 
 
 We have created a Deny Ranger policy to prevent traversal through all directories, thereby avoiding unnecessary scanning. This will help the Datadog agent avoid scanning all folders and files, improving overall performance.
+
+
+curl -i -X DELETE "http://namenode.hadoop.local:9870/webhdfs/v1/tmp/bigdir?op=DELETE&user.name=hdfs&recursive=true"
+
