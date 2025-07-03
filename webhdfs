@@ -1,0 +1,7 @@
+curl -X DELETE "http://<namenode>:9870/webhdfs/v1/user/hadoop/testdir?op=DELETE&recursive=true&user.name=hdfs&doas=targetuser"
+
+
+kinit youruser@YOUR.REALM
+curl --negotiate -u : -X DELETE "http://<namenode>:9870/webhdfs/v1/user/youruser/data?op=DELETE&recursive=true"
+
+curl -u username:password -X DELETE "https://<knox-host>:8443/gateway/default/webhdfs/v1/user/hadoop/testdir?op=DELETE&recursive=true"
