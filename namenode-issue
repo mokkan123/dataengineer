@@ -1,0 +1,16 @@
+NameNode Crash Troubleshooting Summary
+During the investigation of the NameNode crash, we identified multiple contributing factors that led to resource exhaustion and operational delays:
+
+High Load from Monitoring Agent
+The dd-agent was executing hdfs dfs -count every 2 minutes across numerous directories, significantly increasing RPC load and metadata read pressure on the NameNode.
+
+Concurrent Delete Operations
+Although several delete operations were detected, they appear to be part of scheduled job workflows and are not considered the primary cause of the crash.
+
+Unresponsive DataNodes
+Approximately 12 DataNodes were marked as stale due to their failure to send timely heartbeats to the NodeManager. This increased the coordination burden on the NameNode.
+
+✅ Mitigation Actions Underway
+The frequency of the dd-agent's dfs -count job is being reduced from every 2 minutes to once per day to minimize unnecessary load.
+
+Continuous monitoring is being established to track DataNode health and heartbeat intervals.
