@@ -5,6 +5,14 @@ echo
 echo "This is a test email sent using sendmail from the CLI."
 ) | sendmail -t
 
+sendmail -v recipient@example.com <<EOF
+Subject: Test Email from Sendmail Verbose
+To: recipient@example.com
+From: your_email@example.com
+
+This is the body of the test email.
+EOF
+
 
 from pyspark.sql import SparkSession
 import random
