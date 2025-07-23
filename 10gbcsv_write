@@ -14,6 +14,9 @@ This is the body of the test email.
 EOF
 
 
+(echo "To: recipient@example.com"; echo "From: your_email@example.com"; echo "Subject: Verbose Test Email"; echo ""; echo "Hello, this is a test email.") | sendmail -v -t
+
+
 from pyspark.sql import SparkSession
 import random
 
