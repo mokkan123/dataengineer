@@ -1,3 +1,11 @@
+(
+echo "To: recipient@example.com"
+echo "Subject: Test Email via sendmail"
+echo
+echo "This is a test email sent using sendmail from the CLI."
+) | sendmail -t
+
+
 from pyspark.sql import SparkSession
 import random
 
