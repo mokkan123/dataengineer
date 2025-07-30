@@ -1,0 +1,18 @@
+✅ How to Apply in 1.10.7
+Create or edit webserver_config.py in your $AIRFLOW_HOME:
+
+python
+Copy
+Edit
+from datetime import timedelta
+
+PERMANENT_SESSION_LIFETIME = timedelta(minutes=30)
+SESSION_REFRESH_EACH_REQUEST = False
+Then ensure your airflow.cfg includes this line:
+
+ini
+Copy
+Edit
+[webserver]
+web_server_config = /path/to/your/webserver_config.py
+Restart the Airflow webserver.
