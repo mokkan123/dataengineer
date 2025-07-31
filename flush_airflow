@@ -16,3 +16,20 @@ Edit
 [webserver]
 web_server_config = /path/to/your/webserver_config.py
 Restart the Airflow webserver.
+
+<script>
+  let idleSeconds = 0;
+  const maxIdle = 1800; // 30 minutes
+
+  const resetIdle = () => { idleSeconds = 0; };
+  document.onmousemove = resetIdle;
+  document.onkeypress = resetIdle;
+  document.onscroll = resetIdle;
+
+  setInterval(() => {
+    idleSeconds++;
+    if (idleSeconds >= maxIdle) {
+      window.location.href = "/logout";
+    }
+  }, 1000); // check every second
+</script>
