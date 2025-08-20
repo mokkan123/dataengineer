@@ -1,3 +1,14 @@
+Absolute Used Capacity = 8%
+→ This queue is currently using 8% of the whole cluster (its dominant resource share across memory/vcores).
+
+Configured Capacity = 10%
+→ This queue’s guaranteed share (aka capacity) is 10% of its parent queue. If the parent is root (100%), then its Absolute Capacity is 10% of the whole cluster.
+
+Absolute Configured Max Capacity = 50%
+→ This queue can grow up to 50% of the whole cluster when others are idle (soft limit). It cannot be scheduled beyond this.
+
+
+
 (
 echo "To: recipient@example.com"
 echo "Subject: Test Email via sendmail"
