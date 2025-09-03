@@ -1,3 +1,9 @@
+sudo mount -t cifs //nas-server/share /mnt/nas \
+  -o username=<your_user>,password=<your_pass>,vers=3.0,iocharset=utf8
+
+
+
+
 Absolute Used Capacity = 8%
 → This queue is currently using 8% of the whole cluster (its dominant resource share across memory/vcores).
 
