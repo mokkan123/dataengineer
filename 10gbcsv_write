@@ -1,3 +1,52 @@
+Common values:
+
+vers=1.0 → SMB1 (old, insecure, but still needed for legacy systems).
+
+vers=2.0 → SMB2.0 (better performance & security than SMB1).
+
+vers=2.1 → SMB2.1 (Windows 7 / Server 2008 R2).
+
+vers=3.0 → SMB3.0 (Windows 8 / Server 2012; adds encryption, better durability).
+
+vers=3.02 → SMB3.02 (Windows 8.1 / Server 2012 R2).
+
+vers=3.1.1 → SMB3.1.1 (Windows 10 / Server 2016; adds pre-auth integrity, improved security).
+
+👉 If you don’t specify vers=, the kernel tries to auto-negotiate. But for many servers (e.g., Azure Files), you must explicitly specify vers=3.0 or later.
+
+2. sec (Security mode / authentication mechanism)
+
+Purpose: Defines the authentication protocol used between client and server.
+
+Why it matters:
+Not all servers support all security modes. Using the wrong one causes Permission denied or mount error(13) failures.
+
+Common values:
+
+sec=ntlm → Uses NTLM (old, weak).
+
+sec=ntlmv2 → Uses NTLMv2 (stronger, recommended).
+
+sec=ntlmssp → NTLMv2 encapsulated in SPNEGO (used by many modern Windows servers).
+
+sec=krb5 → Kerberos authentication (requires Kerberos setup).
+
+sec=krb5i → Kerberos with integrity checking.
+
+sec=krb5p → Kerberos with integrity + encryption.
+
+👉 By default, mount.cifs usually tries ntlmssp. If your server only supports NTLM or Kerberos, you must override it.
+
+🔹 Example command with both options
+sudo mount.cifs //server.example.com/share /mnt/share \
+  -o username=myuser,domain=MYDOMAIN,vers=3.0,sec=ntlmssp
+
+
+vers=3.0 → Force SMB3.0
+
+sec=ntlmssp → Use modern NTLMv2 authentication wrapped in SPNEGO
+
+
 sudo mount -t cifs //nas-server/share /mnt/nas \
   -o username=<your_user>,password=<your_pass>,vers=3.0,iocharset=utf8
 
