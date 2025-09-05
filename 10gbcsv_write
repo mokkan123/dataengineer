@@ -1,3 +1,29 @@
+Here is a brief summary of the NAS folder configuration across environments.
+
+The NAS folder has been successfully mounted on one of the DEV servers, and the configuration has been prepared so it can be deployed to all other Dremio executor and coordinator nodes.
+
+To expedite this process, I will create a script that:
+
+Installs the required packages (cifs-utils and smbclient)
+
+Configures the mount point
+
+Updates the /etc/fstab file for persistent mounting
+
+A detailed guideline is available here:
+👉 NAS Mount Guide
+
+For the PAT and PROD environments, we first need to validate that:
+
+Dremio servers can access the NAS server
+
+Port 445 (SMB) is open and reachable
+
+Once port access is confirmed and we have the NPID username and password, we can proceed with deployment to PAT and PROD.
+
+
+
+
 Step-by-Step Guide: Setting up a Samba Client on RHEL 7.9
 1. Install Required Packages
 On RHEL 7.9, you need to install cifs-utils and samba-client to enable SMB/CIFS mounting.
