@@ -1,3 +1,54 @@
+Step-by-Step Guide: Setting up a Samba Client on RHEL 7.9
+1. Install Required Packages
+On RHEL 7.9, you need to install cifs-utils and samba-client to enable SMB/CIFS mounting.
+
+Run the following command:
+sudo yum install -y cifs-utils samba-client
+2. Test Connectivity with smbclient
+List available shares on the server:
+smbclient -L //server.example.com -U myuser
+If the server requires a domain:
+smbclient -L //server.example.com -U MYDOMAIN\\myuser
+To connect directly to a share:
+smbclient //server.example.com/share -U myuser
+3. Create a Mount Point
+Create a directory for the SMB share:
+sudo mkdir -p /mnt/data
+4. Create a Credentials File
+For security, store SMB credentials in a file:
+sudo mkdir -p /etc/smbcredentials
+sudo nano /etc/smbcredentials/myshare.cred
+File contents:
+username=myuser
+password=mypassword
+domain=MYDOMAIN
+Secure the file:
+sudo chmod 600 /etc/smbcredentials/myshare.cred
+5. Test Mounting Manually
+Run the following command:
+sudo mount.cifs //server.example.com/share /mnt/data -o credentials=/etc/smbcredentials/myshare.cred,vers=3.0,sec=ntlmssp
+6. Configure /etc/fstab
+Edit /etc/fstab to make the mount persistent:
+sudo nano /etc/fstab
+Add the following line:
+//server.example.com/share   /mnt/data   cifs   credentials=/etc/smbcredentials/myshare.cred,vers=3.0,sec=ntlmssp,iocharset=utf8,file_mode=0770,dir_mode=0770   0   0
+7. Test the fstab Entry
+Run:
+sudo mount -a
+Verify with:
+mount | grep cifs
+df -h /mnt/data
+8. Troubleshooting
+If the mount fails, check connectivity and logs:
+nc -zv server.example.com 445
+dmesg | tail -n 20
+journalctl -xe | grep cifs
+Adjust vers= parameter if needed:
+vers=3.0 (modern servers)
+vers=2.0 or vers=2.1 (older servers)
+vers=1.0 (legacy, insecure)
+
+
 🔹 1. General Format for /etc/fstab
 <server/share>   <mount_point>   <fstype>   <options>   <dump>   <pass>
 
