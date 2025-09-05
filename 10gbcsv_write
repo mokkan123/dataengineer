@@ -1,3 +1,70 @@
+🔹 1. General Format for /etc/fstab
+<server/share>   <mount_point>   <fstype>   <options>   <dump>   <pass>
+
+
+<server/share> → //server/share
+
+<mount_point> → /mnt/data
+
+<fstype> → cifs
+
+<options> → comma-separated list (credentials=..., vers=..., etc.)
+
+<dump> → 0 (don’t dump)
+
+<pass> → 0 (don’t fsck)
+
+🔹 2. Your Example in /etc/fstab
+
+Add this line to /etc/fstab:
+
+# SMB share mount
+//server/share   /mnt/data   cifs   credentials=/etc/smbcredentials/myshare.cred,vers=3.0,sec=ntlmssp,iocharset=utf8,file_mode=0770,dir_mode=0770   0   0
+
+🔹 3. Notes
+
+credentials=/etc/smbcredentials/myshare.cred → safer than putting username/password inline.
+
+iocharset=utf8 → avoids issues with filenames (good default).
+
+file_mode and dir_mode → set default permissions for files/dirs. Adjust if needed.
+
+You can test without rebooting:
+
+sudo mount -a
+
+
+(this will try to mount everything in /etc/fstab).
+
+🔹 4. Verify
+
+Check mounted shares:
+
+mount | grep cifs
+
+
+✅ Final Answer (ready-to-paste):
+
+# SMB share mount
+//server/share   /mnt/data   cifs   credentials=/etc/smbcredentials/myshare.cred,vers=3.0,sec=ntlmssp,iocharset=utf8,file_mode=0770,dir_mode=0770   0   0
+
+
+👉 Do you want me to also show you how to make it mount on demand only (lazy mount) using noauto,x-systemd.automount so it doesn’t hang boot if the server is unreachable?
+
+
+
+
+
+
+
+
+
+# SMB share mount
+//server/share   /mnt/data   cifs   credentials=/etc/smbcredentials/myshare.cred,vers=3.0,sec=ntlmssp,iocharset=utf8,file_mode=0770,dir_mode=0770   0   0
+
+
+
+
 Common values:
 
 vers=1.0 → SMB1 (old, insecure, but still needed for legacy systems).
