@@ -1,0 +1,99 @@
+set -euo pipefail
+
+# ---- Config ----
+CRED_FILE="/etc/smbcredentials/myshare.cred"
+MOUNT_POINT="/mnt/data"
+FSTAB_LINE="//server/share   /mnt/data   cifs   credentials=/etc/smbcredentials/myshare.cred,vers=3.0,sec=ntlmssp,iocharset=utf8,file_mode=0770,dir_mode=0770   0   0"
+FSTAB_BAK="/etc/fstab.bak.$(date +%Y%m%d%H%M%S)"
+
+err(){ echo "ERROR: $*" >&2; exit 1; }
+info(){ echo "==> $*"; }
+
+[[ "${EUID:-$(id -u)}" -eq 0 ]] || err "Please run as root (sudo)."
+
+
+# ---- Step 0: Enable required repos ----
+if command -v subscription-manager >/dev/null 2>&1; then
+  info "Enabling RHEL 7 ELS repos (rhel-7-server-els*)"
+  subscription-manager repos --enable rhel-7-server-els* || info "Warning: Could not enable repos (check subscription status)"
+else
+  info "subscription-manager not found. Skipping repo enable step."
+fi
+
+# ---- Step 1: Install packages ----
+info "Installing packages: cifs-utils samba-client"
+command -v yum >/dev/null 2>&1 || err "This script expects RHEL/CentOS with yum."
+yum install -y cifs-utils samba-client
+
+# ---- Step 2: Read credential file ----
+[[ -f "${CRED_FILE}" ]] || err "Credentials file not found: ${CRED_FILE}"
+[[ -r "${CRED_FILE}" ]] || err "Credentials file not readable: ${CRED_FILE}"
+
+SMB_USER=""
+SMB_PASS=""
+SMB_DOMAIN=""
+while IFS='=' read -r k v; do
+  k="$(echo "${k:-}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+  v="$(echo "${v:-}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+  [[ -z "$k" || "${k:0:1}" == "#" ]] && continue
+  case "$k" in
+    username|user|USER|USERNAME) SMB_USER="$v" ;;
+    password|PASS|PASSWORD)      SMB_PASS="$v" ;;
+    domain|DOMAIN|workgroup|WORKGROUP) SMB_DOMAIN="$v" ;;
+  esac
+done < "${CRED_FILE}"
+
+[[ -n "${SMB_USER}" ]]   || err "username not found in ${CRED_FILE}"
+[[ -n "${SMB_PASS}" ]]   || err "password not found in ${CRED_FILE}"
+# domain can be empty if not used
+
+# Optional: show what we read (mask password)
+info "Read credentials -> username='${SMB_USER}', domain='${SMB_DOMAIN:-<none>}' (password masked)"
+
+# Recommend tight perms
+perm=$(stat -c %a "${CRED_FILE}" 2>/dev/null || echo "")
+if [[ -n "$perm" && "$perm" != "600" ]]; then
+  info "Note: ${CRED_FILE} permissions are ${perm}. Recommended: chmod 600 ${CRED_FILE}"
+fi
+
+# ---- Step 3: Update /etc/fstab ----
+info "Backing up /etc/fstab to ${FSTAB_BAK}"
+cp -a /etc/fstab "${FSTAB_BAK}"
+
+# Ensure mount point exists
+mkdir -p "${MOUNT_POINT}"
+
+# Add or replace the exact CIFS line
+if grep -qF "//server/share   /mnt/data   cifs" /etc/fstab; then
+  info "Existing CIFS entry found. Replacing it."
+  tmpf=$(mktemp)
+  awk -v newline="${FSTAB_LINE}" '
+    {
+      if ($1=="//server/share" && $2=="/mnt/data" && $3=="cifs") {
+        print newline
+      } else {
+        print $0
+      }
+    }' /etc/fstab > "$tmpf"
+  cat "$tmpf" > /etc/fstab
+  rm -f "$tmpf"
+else
+  info "Appending CIFS entry to /etc/fstab."
+  echo "${FSTAB_LINE}" >> /etc/fstab
+fi
+
+# ---- Step 4: Verify the mount ----
+info "Mounting from /etc/fstab (mount -a)"
+mount -a || err "mount -a failed. Check 'dmesg | tail -n 50' for CIFS errors."
+
+if mount | grep -qE "[[:space:]]on[[:space:]]${MOUNT_POINT}[[:space:]].*type cifs"; then
+  info "SUCCESS: CIFS share is mounted on ${MOUNT_POINT}"
+  df -h "${MOUNT_POINT}" || true
+  ls -la "${MOUNT_POINT}" | head -n 20 || true
+else
+  info "Mount not visible. Checking recent kernel messages:"
+  dmesg | tail -n 50
+  err "Failed to verify CIFS mount on ${MOUNT_POINT}."
+fi
+
+info "All steps completed."
