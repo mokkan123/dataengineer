@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# scp_copy.sh
+# Copies files abc and abcd to all nodes listed in 'nodes' file
+
+set -euo pipefail
+
+# ---- Config ----
+FILES=("abc" "abcd")       # files to copy
+NODES_FILE="nodes"         # file containing list of nodes (one per line)
+REMOTE_DIR="~/dest"        # remote destination dir (adjust as needed)
+REMOTE_USER="youruser"     # replace with remote username
+
+# ---- Functions ----
+err(){ echo "ERROR: $*" >&2; exit 1; }
+info(){ echo "==> $*"; }
+
+[[ -f "$NODES_FILE" ]] || err "Nodes file not found: $NODES_FILE"
+
+# ---- Loop through nodes ----
+while read -r NODE; do
+  [[ -z "$NODE" || "$NODE" =~ ^# ]] && continue   # skip blank lines or comments
+  info "Copying files to $REMOTE_USER@$NODE:$REMOTE_DIR"
+
+  for FILE in "${FILES[@]}"; do
+    [[ -f "$FILE" ]] || err "Local file not found: $FILE"
+    scp "$FILE" "${REMOTE_USER}@${NODE}:${REMOTE_DIR}/"
+  done
+
+done < "$NODES_FILE"
+
+info "✅ All copies completed."
