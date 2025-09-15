@@ -1,3 +1,31 @@
+Command to set quota to 75 TB:
+hdfs dfsadmin -setSpaceQuota 75t /data/bloombeg
+
+Steps:
+
+Check the current quota (optional, to confirm before/after):
+
+hdfs dfs -count -q -h /data/bloombeg
+
+
+This will show the current quota usage vs limit.
+
+Update the quota:
+
+hdfs dfsadmin -setSpaceQuota 75t /data/bloombeg
+
+
+Verify the change:
+
+hdfs dfs -count -q -h /data/bloombeg
+
+
+The space-quota column should now show 75 T.
+
+
+
+
+
 Here is a brief summary of the NAS folder configuration across environments.
 
 The NAS folder has been successfully mounted on one of the DEV servers, and the configuration has been prepared so it can be deployed to all other Dremio executor and coordinator nodes.
