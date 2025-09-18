@@ -1,3 +1,18 @@
+Hello Everyone,
+
+Thank you all for working hard to bring solutions to the Dev Envoy issues.
+
+To summarize from the INFOP site, the current workaround/solution for non-HTTP/HTTPS services (HDFS, Kafka, and Zookeeper) is as follows:
+
+Please use the provided hostnames and port numbers for these services.
+
+If you experience any issues, feel free to reach out and let us know right away.
+
+Your efforts are much appreciated!
+
+
+
+
 Command to set quota to 75 TB:
 hdfs dfsadmin -setSpaceQuota 75t /data/bloombeg
 
