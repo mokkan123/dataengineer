@@ -1,0 +1,154 @@
+Prep a client properties file (match your cluster security)
+
+Create client.properties (pick ONE security block and keep the tunings):
+
+# --- choose one ---
+# PLAINTEXT
+# security.protocol=PLAINTEXT
+
+# SSL
+# security.protocol=SSL
+# ssl.truststore.location=/etc/kafka/truststore.jks
+# ssl.truststore.password=changeit
+
+# SASL_SSL (PLAIN example)
+# security.protocol=SASL_SSL
+# sasl.mechanism=PLAIN
+# sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="USER" password="PASS";
+# ssl.truststore.location=/etc/kafka/truststore.jks
+# ssl.truststore.password=changeit
+
+# SASL/GSSAPI (Kerberos example)
+# security.protocol=SASL_PLAINTEXT
+# sasl.mechanism=GSSAPI
+# sasl.kerberos.service.name=kafka
+# sasl.jaas.config=com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true keyTab="/path/app.keytab" principal="app/host@REALM";
+
+# helpful client tunings
+request.timeout.ms=30000
+default.api.timeout.ms=60000
+client.dns.lookup=use_all_dns_ips
+connections.max.idle.ms=180000
+
+1) Basic reachability (from the same host you’ll run tools)
+nc -vz kafka1 6667; nc -vz kafka2 6667; nc -vz kafka3 6667
+getent hosts kafka1 kafka2 kafka3
+
+2) Fetch cluster metadata (maps nodeId → host:port)
+
+With kcat (recommended):
+
+kcat -b kafka1:6667,kafka2:6667,kafka3:6667 -L \
+  # add -X flags if using TLS/SASL, e.g.:
+  # -X security.protocol=SASL_SSL -X sasl.mechanisms=PLAIN \
+  # -X sasl.username=USER -X sasl.password=PASS \
+  # -X ssl.ca.location=/etc/ssl/certs/ca-bundle.crt
+
+
+Verify you see all brokers; note the nodeId and hostname of any coordinator you’ll hit later.
+
+If this hangs → fix advertised.listeners reachability or security mismatch first.
+
+3) Offsets topic health (coordinator depends on this)
+kafka-topics.sh --describe --topic __consumer_offsets \
+  --bootstrap-server kafka1:6667,kafka2:6667,kafka3:6667 \
+  --command-config client.properties
+
+
+✅ Expect every partition to show a leader with reasonable ISR.
+❌ If “leader: none” or many URPs → fix broker/quorum before proceeding.
+
+4) Group coordinator path (FindCoordinator → OffsetFetch)
+
+List consumer groups:
+
+kafka-consumer-groups.sh --list \
+  --bootstrap-server kafka1:6667,kafka2:6667,kafka3:6667 \
+  --command-config client.properties
+
+
+Describe a specific group (replace my-group):
+
+kafka-consumer-groups.sh --describe --group my-group \
+  --bootstrap-server kafka1:6667,kafka2:6667,kafka3:6667 \
+  --command-config client.properties
+
+
+You’ll see CURRENT-OFFSET, LOG-END-OFFSET, LAG, and active members.
+If this times out/disconnects, grab the coordinator host from logs or kcat -L and ensure DNS/TCP reachability to that advertised host:port.
+
+5) Quick lag check (topic-wide)
+kafka-consumer-groups.sh --describe --group my-group \
+  --bootstrap-server kafka1:6667,kafka2:6667,kafka3:6667 \
+  --command-config client.properties | awk 'NR==1 || $0 ~ /[0-9]/{print}'
+
+
+(Shows partition rows only; sanity-check LAG.)
+
+6) Produce/consume sanity (optional but powerful)
+
+Create a test topic:
+
+kafka-topics.sh --create --topic demo.topic --partitions 3 --replication-factor 3 \
+  --bootstrap-server kafka1:6667,kafka2:6667,kafka3:6667 \
+  --command-config client.properties
+
+
+Produce a few records:
+
+seq 1 10 | kafka-console-producer.sh --topic demo.topic \
+  --bootstrap-server kafka1:6667,kafka2:6667,kafka3:6667 \
+  --producer.config client.properties
+
+
+Peek messages (no commit):
+
+kafka-console-consumer.sh --topic demo.topic --from-beginning --max-messages 5 \
+  --bootstrap-server kafka1:6667,kafka2:6667,kafka3:6667 \
+  --consumer.config client.properties
+
+
+Consume under a group (to generate commits):
+
+kafka-console-consumer.sh --topic demo.topic --from-beginning \
+  --group demo.group \
+  --bootstrap-server kafka1:6667,kafka2:6667,kafka3:6667 \
+  --consumer.config client.properties --timeout-ms 5000
+
+
+Confirm committed offsets & lag:
+
+kafka-consumer-groups.sh --describe --group demo.group \
+  --bootstrap-server kafka1:6667,kafka2:6667,kafka3:6667 \
+  --command-config client.properties
+
+7) If you hit timeouts/disconnects on OffsetFetch/Commit
+
+Verify the coordinator’s hostname/port from kcat -L and ensure:
+
+getent hosts <coordinator-host>
+nc -vz <coordinator-host> <port>
+
+
+Ensure client security matches the listener in use (PLAINTEXT/SSL/SASL*).
+
+Bump timeouts (already in client.properties) and ensure any LB/mesh idle timeout ≥ 5–10 min.
+
+Check broker-side:
+
+advertised.listeners resolvable from client network.
+
+TLS cert CN/SAN matches advertised hostnames.
+
+No connection quota hits (max.connections{,.per.ip}) or “Too many open files”.
+
+__consumer_offsets has leaders.
+
+8) Helpful debug toggles
+export KAFKA_OPTS="-Dorg.slf4j.simpleLogger.defaultLogLevel=debug"
+# then rerun the CLI command that fails, e.g. consumer-groups --describe
+
+
+Watch for SSL handshake, SASL auth, or connecting to node X loops (unreachable advertised host).
+
+This checklist gives you a clean “green path” and the exact spots to probe if it turns red. If any single step fails, tell me which command + output you see, and I’ll pinpoint the fix.
