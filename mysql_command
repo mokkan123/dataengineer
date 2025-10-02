@@ -1,1 +1,81 @@
 SELECT user, host FROM mysql.user ORDER BY user, host;
+
+
+1) Allow a remote host for a specific database
+
+Create the account bound to the host (or subnet) and grant privileges:
+
+-- Example: allow only this IP to access database `mydb` with full RW
+CREATE USER 'appuser'@'203.0.113.25' IDENTIFIED BY 'StrongP@ss!';
+GRANT ALL PRIVILEGES ON mydb.* TO 'appuser'@'203.0.113.25';
+
+
+Read-only example:
+
+CREATE USER 'report'@'192.168.10.%' IDENTIFIED BY 'StrongP@ss!';
+GRANT SELECT ON mydb.* TO 'report'@'192.168.10.%';
+
+
+Subnets / ranges:
+
+Any host: '%'
+
+Subnet via wildcard: '10.1.%.%'
+
+Exact DNS name also works (MariaDB resolves names if enabled).
+
+You do not need FLUSH PRIVILEGES after CREATE USER/GRANT.
+
+2) Allow a remote host for all databases
+-- DBA-style access to everything (omit WITH GRANT OPTION unless you intend delegation)
+CREATE USER 'dba'@'192.168.10.%' IDENTIFIED BY 'AnotherStr0ng!';
+GRANT ALL PRIVILEGES ON *.* TO 'dba'@'192.168.10.%';
+-- Optionally: WITH GRANT OPTION;
+
+
+Least-privilege pattern (example global read only):
+
+CREATE USER 'ro'@'%' IDENTIFIED BY 'Read0nly!';
+GRANT SELECT ON *.* TO 'ro'@'%';
+
+3) “Update” an existing account’s host
+
+You can’t change HOST in place; create/rename instead.
+
+Option A — rename:
+RENAME USER 'appuser'@'localhost' TO 'appuser'@'10.0.%.%';
+
+Option B — recreate:
+-- 1) Show current grants (copy them)
+SHOW GRANTS FOR 'appuser'@'localhost';
+
+-- 2) Create new host-bound account
+CREATE USER 'appuser'@'10.0.%.%' IDENTIFIED BY 'StrongP@ss!';
+
+-- 3) Re-apply the copied grants, changing the host to '10.0.%.%'
+
+-- 4) Remove the old one if not needed
+DROP USER 'appuser'@'localhost';
+
+4) Verify
+-- See which hosts are allowed
+SELECT user, host FROM mysql.user ORDER BY user, host;
+
+-- Check a specific account’s grants
+SHOW GRANTS FOR 'appuser'@'10.0.%.%';
+
+-- See live connections (remote hosts)
+SHOW PROCESSLIST;
+
+5) Safety tips
+
+Avoid 'user'@'%' with ALL PRIVILEGES unless truly required.
+
+Use strong passwords and consider REQUIRE SSL for remote accounts:
+
+CREATE USER 'appuser'@'203.0.113.25' IDENTIFIED BY 'StrongP@ss!' REQUIRE SSL;
+
+
+If you manually UPDATE mysql.user, you must FLUSH PRIVILEGES; (but that approach is discouraged).
+
+If you tell me the exact user(s), database(s), and the host/IP (or range), I’ll spit out the exact CREATE USER + GRANT statements ready to run.
