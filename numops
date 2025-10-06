@@ -1,0 +1,4 @@
+# Example quick method
+curl -s http://nn-host:9870/jmx?q=NameNodeActivity | jq '.beans[] | .TransactionsNumOps'
+sleep 60
+curl -s http://nn-host:9870/jmx?q=NameNodeActivity | jq '.beans[] | .TransactionsNumOps'
