@@ -1,0 +1,22 @@
+NN_HOST="<namenode-host>"    # <- change this
+PORT="9870"                  # 9870 (new) or 50070 (old)
+URL="http://$NN_HOST:$PORT/jmx?q=NameNodeActivity"
+
+# 1) Average txns/sec over 60 seconds
+start=$(curl -s "$URL" | jq -r '.beans[] | select(.name|test("NameNodeActivity$")) | .TransactionsNumOps')
+for i in $(seq 1 60); do
+  sleep 1
+  end=$(curl -s "$URL" | jq -r '.beans[] | select(.name|test("NameNodeActivity$")) | .TransactionsNumOps')
+done
+avg_tps=$(echo "scale=3; ($end - $start) / 60" | bc)
+echo "Average txns/sec over 60s: $avg_tps"
+
+# 2) Average TransactionsAvgTime (seconds) over 60 samples
+sum=0
+for i in $(seq 1 60); do
+  v=$(curl -s "$URL" | jq -r '.beans[] | select(.name|test("NameNodeActivity$")) | .TransactionsAvgTime')
+  sum=$(awk -v a="$sum" -v b="$v" 'BEGIN{printf "%.12f", a + b}')
+  sleep 1
+done
+avg_time=$(awk -v s="$sum" 'BEGIN{printf "%.6f", s / 60}')
+echo "Average TransactionsAvgTime over 60 samples (s): $avg_time"
