@@ -1,0 +1,47 @@
+#!/bin/bash
+
+DURATION=${1:-20}
+URL="http://abc.com/value"
+
+echo "Fetching values from $URL every second for $DURATION seconds..."
+sum=0
+count=0
+initial_value=0
+final_value=0
+
+for ((i=1; i<=DURATION; i++)); do
+    value=$(curl -s "$URL" | tr -dc '0-9.\n')  # extract numeric value
+
+    if [[ -n "$value" ]]; then
+        sum=$(echo "$sum + $value" | bc)
+        ((count++))
+        echo "[$i] Value: $value"
+
+        # Capture initial value on first iteration
+        if [ "$i" -eq 1 ]; then
+            initial_value=$value
+        fi
+
+        # Capture final value on last iteration
+        if [ "$i" -eq "$DURATION" ]; then
+            final_value=$value
+        fi
+    else
+        echo "[$i] No numeric value found"
+    fi
+
+    sleep 1
+done
+
+if ((count > 0)); then
+    avg=$(echo "scale=4; $sum / $count" | bc)
+    diff_per_sec=$(echo "scale=4; ($final_value - $initial_value) / $DURATION" | bc)
+
+    echo "---------------------------------"
+    echo "Initial value: $initial_value"
+    echo "Final value:   $final_value"
+    echo "Average value: $avg"
+    echo "Change per second (Δ/DURATION): $diff_per_sec"
+else
+    echo "No valid values collected."
+fi
