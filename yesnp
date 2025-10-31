@@ -1,0 +1,3 @@
+We would like to store passwords — particularly the NPID password — in a secure location such as a Key Vault, as required by our project.
+
+We’ve created the intake request and would like to discuss the proper approach for implementing this solution and managing it effectively going forward.
