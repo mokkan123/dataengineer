@@ -1,0 +1,36 @@
+# Check if input is empty
+if [[ -z "$ENV" ]]; then
+    echo "Usage: $0 <DEV|PAT|PRD>"
+    exit 1
+fi
+
+# Convert to uppercase (for safety)
+ENV=$(echo "$ENV" | tr '[:lower:]' '[:upper:]')
+
+# Perform actions based on input
+if [[ "$ENV" == "DEV" ]]; then
+    echo "Environment selected: DEV"
+    echo "Running DEV configuration..."
+    echo "Connecting to DEV database..."
+    echo "Deploying application to DEV environment..."
+    echo "✅ DEV setup complete."
+
+elif [[ "$ENV" == "PAT" ]]; then
+    echo "Environment selected: PAT"
+    echo "Running PAT configuration..."
+    echo "Connecting to PAT staging servers..."
+    echo "Deploying test package to PAT environment..."
+    echo "✅ PAT setup complete."
+
+elif [[ "$ENV" == "PRD" ]]; then
+    echo "Environment selected: PRD"
+    echo "Running PRD configuration..."
+    echo "Connecting to PRD production cluster..."
+    echo "Deploying release build to PRD environment..."
+    echo "✅ PRD setup complete."
+
+else
+    echo "❌ Invalid environment: $ENV"
+    echo "Valid options are: DEV, PAT, or PRD"
+    exit 1
+fi
