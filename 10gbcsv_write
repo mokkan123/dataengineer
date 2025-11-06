@@ -1,3 +1,12 @@
+1️⃣ JournalNodes (rolling)
+2️⃣ Standby NameNode
+3️⃣ Failover Active → Standby
+4️⃣ Restart new Standby (old Active)
+5️⃣ Restart ZKFC
+6️⃣ Restart DataNodes (rolling)
+
+
+
 Hello Everyone,
 
 Thank you all for working hard to bring solutions to the Dev Envoy issues.
