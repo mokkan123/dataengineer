@@ -35,3 +35,6 @@ awk '
 # Replace original
 mv "$TEMP" "$FSTAB"
 echo "Cleanup complete. Only one DropZone/Dremio entry remains."
+
+
+sed -i "0,|$FSTAB_LINE|!{/ $FSTAB_LINE /d}" /etc/fstab
