@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+#
+# clean_dropzone_dremio.sh
+# Keeps only one line containing "DropZone/Dremio" in /etc/fstab.
+#
+
+set -euo pipefail
+
+FSTAB="/etc/fstab"
+BACKUP="/etc/fstab.$(date +%Y%m%d-%H%M%S).bak"
+TEMP="/etc/fstab.tmp"
+
+# Ensure root
+if [[ $EUID -ne 0 ]]; then
+  echo "Please run as sudo/root."
+  exit 1
+fi
+
+# Backup first
+cp "$FSTAB" "$BACKUP"
+echo "Backup created: $BACKUP"
+
+# Keep first DropZone/Dremio entry, remove duplicates
+awk '
+/DropZone\/Dremio/ {
+    if (seen == 1) {
+        # skip duplicate lines
+        next
+    }
+    seen = 1
+}
+{ print }
+' "$FSTAB" > "$TEMP"
+
+# Replace original
+mv "$TEMP" "$FSTAB"
+echo "Cleanup complete. Only one DropZone/Dremio entry remains."
