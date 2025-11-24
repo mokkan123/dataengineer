@@ -38,3 +38,10 @@ echo "Cleanup complete. Only one DropZone/Dremio entry remains."
 
 
 sed -i "0,|$FSTAB_LINE|!{/ $FSTAB_LINE /d}" /etc/fstab
+
+COUNT=$(grep -c "/mount/abcd" /etc/fstab)
+
+if (( COUNT > 1 )); then
+    echo "Duplicate entries found: $COUNT"
+fi
+
