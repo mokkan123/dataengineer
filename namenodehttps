@@ -1,0 +1,19 @@
+You are accessing the HDFS NameNode UI over HTTPS, but when you attempt to download a file, the request is redirected to a DataNode over HTTP instead of HTTPS.
+
+This results in mixed content — a secure webpage (HTTPS) attempting to load an insecure resource (HTTP). Modern Google Chrome versions block all active mixed content, including file downloads, scripts, and frames.
+
+Chrome’s behavior is straightforward:
+
+The NameNode UI is loaded securely over HTTPS
+
+The DataNode download link uses HTTP
+
+Since the browser sees a downgrade from HTTPS → HTTP, it flags the request as mixed content and blocks the download for security reasons.
+
+How to fix this
+
+Enable HTTPS on all DataNodes
+Install and configure SSL certificates so both NameNode and DataNode URLs use HTTPS. This provides end-to-end encryption and ensures Chrome does not block the download.
+
+Temporary workaround
+Use Firefox or Microsoft Edge, which still allow mixed-content downloads with fewer restrictions.
