@@ -1,3 +1,21 @@
+lain English:
+
+AMS uses Phoenix to aggregate raw metrics into minute / hourly / daily summary tables.
+
+During that aggregation, Phoenix builds an internal MutationState (a buffered batch of rows to write).
+
+That buffer got bigger than phoenix.mutate.maxSizeBytes (your current limit is 100 MB).
+
+So Phoenix throws ERROR 730 (LIM02) and the aggregation fails.
+
+Ambari JIRA confirms this exact problem for AMS: when batches are large and phoenix.mutate.maxSizeBytes is 104857600 (100 MB), the collector fails storing aggregated data with this error.
+Apache Issues
+
+So:
+
+Root cause:
+AMS cluster aggregation jobs are trying to write too much data in one Phoenix batch, exceeding the configured phoenix.mutate.maxSizeBytes (100 MB), which causes Phoenix to throw ERROR 730 and drop those aggregated metrics.
+
 1️⃣ What does the ERROR 730 actually mean?
 
 ERROR 730 (LIM02): MutationState size is bigger than maximum allowed number of bytes
