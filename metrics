@@ -1,0 +1,179 @@
+1️⃣ What does the ERROR 730 actually mean?
+
+ERROR 730 (LIM02): MutationState size is bigger than maximum allowed number of bytes
+
+This means:
+
+Phoenix keeps pending writes in a buffer called MutationState.
+
+At some moment during your aggregation job, the total size of pending writes in that buffer became larger than phoenix.mutate.maxSizeBytes.
+
+When that happens, Phoenix throws ERROR 730 and fails that operation instead of allowing the buffer to grow forever.
+
+So to answer your first question:
+
+Does it mean that every time it aggregates, it is bigger than mutate size?
+
+Not exactly every time — it means:
+
+For that specific aggregation run, the current batch of pending mutations ( MutationState ) grew bigger than the configured limit (e.g., 104857600 = 100 MB).
+
+When it crosses that threshold → boom, ERROR 730.
+
+If aggregation is running periodically and always building a big mutation, you may see this error every run, but technically it’s about that current batch, not “forever”.
+
+2️⃣ What is phoenix.mutate.maxSizeBytes really?
+
+Think of Phoenix like this:
+
+When you do UPSERT/DELETE/etc, Phoenix doesn’t immediately send each row to HBase (especially in batch workloads).
+
+Instead, it buffers the changes in memory (MutationState).
+
+phoenix.mutate.maxSizeBytes = the maximum total size (in bytes) of that in-memory buffer.
+
+So:
+
+phoenix.mutate.maxSizeBytes = 104857600  → 100 MB
+
+
+means:
+
+“Phoenix is allowed to buffer up to ~100 MB of pending writes in memory.
+If the buffer grows beyond this, throw an error.”
+
+It’s basically a safety limit on the size of one “commit batch”.
+
+3️⃣ Why do we need phoenix.mutate.maxSizeBytes at all?
+
+Because without this limit, bad things can happen:
+
+Memory protection (client side)
+
+If a job builds a huge batch (hundreds of MB / GB) before commit, the Phoenix client JVM can run out of memory.
+
+maxSizeBytes prevents a single mutation batch from becoming too big and blowing up the client with OOM.
+
+HBase / network safety
+
+Very large single RPCs to HBase are dangerous:
+
+They take a long time
+
+They can hit RPC timeouts
+
+They can block handlers on the RegionServer
+
+Splitting work into smaller batches keeps HBase healthier.
+
+Failure impact
+
+If you commit 1 GB in one batch and it fails → you potentially lose or have to retry the whole 1 GB.
+
+If your max is 50–100 MB, each failure only impacts that chunk.
+
+So this setting is about controlling batch size, protecting memory, and keeping HBase stable.
+
+4️⃣ How this ties to your AMS aggregation error
+
+In your Ambari Metrics / AMS case:
+
+The TimelineClusterAggregationMinute job reads a lot of raw metrics, computes aggregates, and then writes them back via Phoenix.
+
+It does this using a Phoenix connection that buffers all those UPSERTs into MutationState.
+
+As it aggregates more metrics, this buffer grows…
+
+When the buffer passes phoenix.mutate.maxSizeBytes (100 MB):
+
+Phoenix throws ERROR 730.
+
+The aggregation job fails with java.sql.SQLException.
+
+That’s the error you’re seeing in the logs.
+
+So yes: in that moment, the aggregated metrics batch is larger than your 100 MB mutation limit.
+
+5️⃣ Why increasing phoenix.mutate.maxSizeBytes fixes it
+
+If you increase:
+
+phoenix.mutate.maxSizeBytes = 267386880   # ~255 MB
+
+
+then:
+
+The same aggregation job can now buffer more metrics in a single batch before hitting the limit.
+
+For AMS, that’s usually enough to let the cluster/hour/day aggregation complete successfully.
+
+That’s why in practice, raising this limit is the known fix for your specific AMS aggregation failure.
+
+6️⃣ Quick recap in simple words
+
+MutationState = Phoenix’s “shopping cart” of pending writes.
+
+phoenix.mutate.maxSizeBytes = “maximum allowed size of the shopping cart”.
+
+ERROR 730 = “Your cart is too full (too many bytes), I refuse to proceed.”
+
+In AMS:
+
+Aggregation is adding lots of items to the cart (metric rows).
+
+With a 100 MB cart limit, it overflows → error.
+
+Increasing the limit (e.g., to ~255 MB) gives aggregation enough room to finish.
+
+If you’d like, I can:
+
+Suggest exact values for:
+
+phoenix.mutate.maxSizeBytes
+
+phoenix.mutate.batchSize
+
+phoenix.query.timeoutMs
+
+phoenix.rpc.timeout / hbase.rpc.timeout
+Name: phoenix.mutate.maxSizeBytes
+Value: 267386880
+(≈ 255 MB — value used in Ambari JIRA fixes)
+
+Save config and restart:
+
+ambari-metrics-monitor (AMS HBase)
+
+ambari-metrics-collector
+
+⭐ 5️⃣ Why this setting MUST be added for AMS
+Because:
+
+AMS generates huge Phoenix mutations during minute/hour/day rollups.
+
+These easily exceed the default 100 MB limit.
+
+When that happens → aggregation fails → no long-term metrics → your 12-hour limit issue appears.
+
+Setting a higher limit (200–256 MB) is the known fix.
+
+⭐ 6️⃣ Confirming it worked
+After adding the property, check:
+
+lua
+Copy code
+grep mutate.maxSizeBytes /var/log/ambari-metrics-collector/ambari-metrics-collector.log
+You should see something like:
+
+vbnet
+Copy code
+phoenix.mutate.maxSizeBytes set to 267386880
+If you don’t see it, it means AMS HBase was not restarted.
+
+⭐ Summary
+Question	Answer
+Why is phoenix.mutate.maxSizeBytes missing in hbase-site.xml?	Because Phoenix never writes default values unless overridden.
+What is the default?	100 MB (104857600 bytes)
+Why are we getting ERROR 730?	Aggregation batch exceeds the 100 MB default limit.
+How to fix it?	Add phoenix.mutate.maxSizeBytes manually in AMS HBase config and raise it to ~255 MB.
+Based on whether your cluster is small/medium/large and what kind of metric volume you see.
