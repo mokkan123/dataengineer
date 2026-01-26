@@ -1,1 +1,75 @@
+Overview
+
+The HDFS NameNode experienced an outage during a period of degraded cluster health. At the time of the incident, a significant number of DataNodes were marked stale, and the NameNode was logging repeated block placement warnings. Concurrently, a high volume of metadata delete operations increased contention on the FSNamesystem write lock, ultimately leading to NameNode instability and failure.
+
+Timeline & Observations
+1. DataNode Health Degradation
+
+Approximately 10–15 DataNodes were marked as stale at the time of the incident.
+
+Stale DataNodes are treated by the NameNode as ineligible for new block placement, reducing the effective pool of usable storage targets.
+
+2. Block Placement Failures
+
+The NameNode repeatedly logged warnings similar to:
+
+BlockPlacementPolicy: failed to place enough replicas, still in need of 3 to reach replication factor 3, unavailable storages
+
+
+These warnings indicate that HDFS was unable to find sufficient non-stale, eligible DataNodes to satisfy the replication requirements.
+
+3. Increased Metadata Workload
+
+During the same period, delete operations were issued against HDFS.
+
+Delete operations require FSNamesystem write lock acquisition, as they involve namespace and block metadata updates.
+
+4. FSNamesystem Lock Contention
+
+Due to:
+
+reduced DataNode availability,
+
+repeated block placement retries,
+
+and concurrent delete operations,
+
+the FSNamesystem write lock queue length increased significantly.
+
+The NameNode logged warnings indicating prolonged write lock holds, for example:
+
+FSNamesystem write lock held for XXXXX ms
+
+5. NameNode Failure
+
+Sustained lock contention and elevated metadata processing pressure caused the NameNode to become slow and unresponsive.
+
+This condition ultimately led to the NameNode crashing / being taken down (e.g., due to JVM instability, GC pressure, or external watchdog intervention).
+
+Root Cause Analysis
+Primary Contributors
+
+High number of stale DataNodes, reducing effective storage capacity.
+
+Block replication failures, increasing BlockManager workload.
+
+Concurrent delete operations, requiring exclusive FSNamesystem write locks.
+
+Contributing Factors
+
+Elevated FSNamesystem write lock contention and queue length.
+
+Increased NameNode metadata processing under degraded cluster conditions.
+
+Clarification
+
+The BlockPlacementPolicy: failed to place enough replicas warning did not directly crash the NameNode.
+
+Instead, it acted as a stress amplifier, contributing to excessive metadata workload and lock contention, which ultimately led to NameNode instability.
+
+Conclusion
+
+The NameNode outage was the result of combined cluster health degradation and metadata workload pressure. Stale DataNodes and block placement failures reduced HDFS’s ability to process replication efficiently, while simultaneous delete operations intensified FSNamesystem write lock contention. The accumulation of these factors caused the NameNode to become unresponsive and ultimately go down.
+
+
 At the time of the NameNode outage, approximately 10–15 DataNodes were marked as stale, reducing the number of available storage targets. During this period, the NameNode logged repeated warnings indicating block placement failures due to unavailable storages. Concurrent delete operations increased metadata activity, leading to a high FSNamesystem write lock queue length. The combined impact of reduced DataNode availability, block placement retries, and elevated metadata delete workload caused severe lock contention, resulting in the NameNode becoming unresponsive and ultimately going down.
