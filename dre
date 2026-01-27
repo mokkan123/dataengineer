@@ -1,0 +1,8 @@
+Problem: After HDFS NameNode failover, some Dremio tables lose format/metadata and require manual repair.
+Plan:
+
+Monitor and detect NameNode failover events (active ↔ standby switch).
+
+Trigger an automated remediation workflow to correct Dremio table format/metadata issues.
+
+Execute post-fix validation: sanity checks across Dremio and dependent applications to confirm data access and consistency
