@@ -1,0 +1,48 @@
+Proposed Automation Workflow
+1. Baseline Dataset Format Snapshot
+
+Extract the current data format metadata for all Dremio datasets.
+
+Store this baseline snapshot in a structured Excel file or centralized repository.
+
+This snapshot will serve as the source of truth for expected dataset formats.
+
+2. Periodic Format Validation & Alerting
+
+Execute an automated validation script on a scheduled basis.
+
+Compare the current dataset format in Dremio with the baseline snapshot.
+
+If a format mismatch is detected:
+
+Notify the dataset owner(s) or owning group.
+
+Request confirmation on whether the change was intentional or accidental.
+
+Based on confirmation:
+
+Intentional change → Update the baseline snapshot.
+
+Unintentional change → Trigger the auto-fix or remediation workflow.
+
+3. Root Cause Monitoring & Event Tracking
+
+Implement continuous monitoring for known system events that may cause dataset format loss and correlate them with detected anomalies.
+
+a. HDFS NameNode Events
+
+Detect NameNode failures, failovers, or metadata inconsistencies.
+
+Flag dataset format changes occurring immediately after these events.
+
+b. Dremio Executor Events
+
+Monitor executor restarts, failures, or YARN container re-allocations.
+
+Correlate executor-related events with dataset format anomalies.
+
+c. Access & Permission Changes
+
+Track Active Directory (AD) group membership and permission changes.
+
+Correlate access-related events with dataset format anomalies.
