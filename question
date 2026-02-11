@@ -27,3 +27,6 @@ Screenshot of the HDFS page
 Exact time of occurrence
 
 These details will help us determine whether this is an application, network, or HDFS service issue.
+
+
+At the time uploads were successful, did you observe any Kafka connectivity issues, or was Kafka functioning normally?
