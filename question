@@ -1,0 +1,20 @@
+📌 DG-UPLOAD → HDFS Investigation Questions
+
+1️⃣ Can you share the full DG-UPLOAD-Service stack trace with the exact timestamp of the failure?
+
+2️⃣ When did this issue start, and how frequently is it occurring?
+
+3️⃣ At the time of failure, were you able to access https://hdfs
+? Did it load normally, slowly, or not at all?
+
+4️⃣ Does the issue happen randomly, during peak hours, or on every upload?
+
+5️⃣ If it happens again, can you capture:
+
+Screenshot of the DG-UPLOAD error log
+
+Screenshot of the HDFS page
+
+Exact time of occurrence
+
+These details will help us determine whether this is an application, network, or HDFS service issue.
