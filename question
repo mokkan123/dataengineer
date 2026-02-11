@@ -1,3 +1,12 @@
+As discussed, we were unable to find any specific error messages or concrete evidence in the HDFS logs related to this incident. We observed that the cluster load was slightly elevated at the time, but it was still within normal operating limits, and the NameNode should be capable of handling that level of load.
+
+We also reviewed the DG-UPLOAD-Service log files and did not find any clear error messages corresponding to the reported issue.
+
+However, we identified that there are two application servers involved, and one of them is currently not reporting metrics to Datadog. Because of this, we are unsure whether the upload attempt may have originated from that server.
+
+I have a few follow-up questions to help narrow this down. Could you please review and provide clarification?
+
+
 📌 DG-UPLOAD → HDFS Investigation Questions
 
 1️⃣ Can you share the full DG-UPLOAD-Service stack trace with the exact timestamp of the failure?
