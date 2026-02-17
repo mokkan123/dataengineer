@@ -1,0 +1,5 @@
+Normally, when a client writes a block to HDFS with a replication factor of 3, the NameNode selects three DataNodes and provides that pipeline to the client. The client then writes the block through that pipeline.
+
+If one of the DataNodes in the pipeline fails during the write, the client detects the failure, reports it, and requests a replacement DataNode from the NameNode. A new pipeline is then established, and the block write continues using another available DataNode.
+
+Since we have 66 DataNodes in the cluster, there should be sufficient healthy nodes available for pipeline reconstruction if a single DataNode fails.
