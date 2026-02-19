@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# --------- CONFIG (edit these) ----------
+AMBARI_HOST="ambari-server.company.com"
+AMBARI_PORT="8080"
+CLUSTER_NAME="MyCluster"
+
+AMBARI_USER="admin"
+AMBARI_PASS="admin"
+
+SLEEP_SECONDS=60
+HOST_FILE="nodemanager.txt"
+# ---------------------------------------
+
+AMBARI_BASE="http://${AMBARI_HOST}:${AMBARI_PORT}/api/v1/clusters/${CLUSTER_NAME}"
+AUTH="${AMBARI_USER}:${AMBARI_PASS}"
+HDR="X-Requested-By: ambari"
+
+require_file() {
+  if [[ ! -f "$1" ]]; then
+    echo "ERROR: file not found: $1"
+    exit 1
+  fi
+}
+
+# Clean host list: remove blanks/comments/CRLF
+read_hosts() {
+  sed -e 's/\r$//' -e 's/#.*$//' -e '/^[[:space:]]*$/d' "$HOST_FILE"
+}
+
+ambari_put_host_component_state() {
+  local host="$1"
+  local component="$2"
+  local state="$3"  # INSTALLED (stop) or STARTED (start)
+
+  local url="${AMBARI_BASE}/hosts/${host}/host_components/${component}"
+  local payload
+  payload=$(printf '{"RequestInfo":{"context":"%s %s on %s via REST"},"Body":{"HostRoles":{"state":"%s"}}}' \
+    "$state" "$component" "$host" "$state")
+
+  # -f = fail on HTTP >= 400, -sS = silent but show errors
+  curl -f -sS -u "$AUTH" -H "$HDR" -X PUT \
+    --data "$payload" \
+    "$url" >/dev/null
+
+  echo "OK: ${state} ${component} on ${host}"
+}
+
+main() {
+  require_file "$HOST_FILE"
+
+  mapfile -t HOSTS < <(read_hosts)
+
+  if [[ "${#HOSTS[@]}" -eq 0 ]]; then
+    echo "ERROR: no hosts found in ${HOST_FILE}"
+    exit 1
+  fi
+
+  echo "Hosts (${#HOSTS[@]}):"
+  printf ' - %s\n' "${HOSTS[@]}"
+
+  echo
+  echo "Stopping NODEMANAGER on all hosts..."
+  for h in "${HOSTS[@]}"; do
+    ambari_put_host_component_state "$h" "NODEMANAGER" "INSTALLED"
+  done
+
+  echo
+  echo "Sleeping ${SLEEP_SECONDS}s..."
+  sleep "${SLEEP_SECONDS}"
+
+  echo
+  echo "Starting NODEMANAGER on all hosts..."
+  for h in "${HOSTS[@]}"; do
+    ambari_put_host_component_state "$h" "NODEMANAGER" "STARTED"
+  done
+
+  echo
+  echo "Done."
+}
+
+main "$@"
