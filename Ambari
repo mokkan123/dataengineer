@@ -1,0 +1,17 @@
+curl -u admin:admin -H "X-Requested-By: ambari" -X POST \
+http://<AMBARI_SERVER>:8080/api/v1/clusters/<CLUSTER_NAME>/requests \
+-d '{
+  "RequestInfo": {
+    "context": "Stop Standby ResourceManager"
+  },
+  "Requests/resource_filters": [
+    {
+      "service_name": "YARN",
+      "component_name": "RESOURCEMANAGER",
+      "hosts": "<STANDBY_RM_HOST>"
+    }
+  ],
+  "Requests": {
+    "command": "STOP"
+  }
+}'
