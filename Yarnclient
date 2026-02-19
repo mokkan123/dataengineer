@@ -1,0 +1,16 @@
+curl -u admin:admin -H "X-Requested-By: ambari" -X POST \
+-d '{
+  "RequestInfo": {
+    "context": "Restart YARN Clients",
+    "operation_level": {
+      "level": "SERVICE",
+      "cluster_name": "<CLUSTER_NAME>",
+      "service_name": "YARN"
+    }
+  },
+  "Requests/resource_filters": [{
+    "service_name": "YARN",
+    "component_name": "YARN_CLIENT"
+  }]
+}' \
+http://<AMBARI_HOST>:8080/api/v1/clusters/<CLUSTER_NAME>/requests
