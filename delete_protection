@@ -1,0 +1,19 @@
+NameNode Delete Protection – Detailed Summary
+dfs.namenode.delete.rate.limit
+Overview
+
+dfs.namenode.delete.rate.limit is a NameNode protection parameter designed to throttle delete operations per second in HDFS. Its primary purpose is to safeguard the NameNode from delete storms that can destabilize the cluster control plane.
+
+In large-scale environments, especially those running Spark or Hive workloads, massive recursive directory deletions are common. Without safeguards, these delete bursts can overwhelm the NameNode and lead to:
+
+Massive recursive delete pressure
+
+FSNamesystem lock contention
+
+Edit log overload
+
+RPC queue congestion
+
+Stale DataNode cascades
+
+Because the NameNode manages all metadata in memory, uncontrolled delete activity directly impacts cluster stability.
