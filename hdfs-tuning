@@ -1,0 +1,48 @@
+Objective
+Improve NameNode stability and performance by reducing RPC backlog, preventing stale-node cascade, and protecting against delete storms.
+
+1) Configuration Changes
+
+Heartbeat (Keep Default)
+dfs.heartbeat.interval = 3
+
+Stale Node Handling
+dfs.namenode.avoid.read.stale.datanode = true
+dfs.namenode.avoid.write.stale.datanode = true
+
+
+NameNode RPC Concurrency
+dfs.namenode.handler.count = 48
+dfs.namenode.service.handler.count = 24
+
+Purpose:
+
+Reduce RPC queue backlog
+
+Prevent heartbeats and block reports from being blocked by client load
+
+DataNode RPC Threads
+dfs.datanode.handler.count = 16
+
+Purpose: Improve block read/write parallelism (appropriate for single-disk DataNodes).
+
+Delete Rate Protection -  Need to test after we changed those parameter
+dfs.namenode.delete.rate.limit = 10000
+
+
+
+Reduce lock queue spikes and stale node bursts
+
+
+2. NameNode Heap Increase
+Set NameNode heap to: -Xmx96g
+
+Purpose:
+
+Support large metadata footprint
+
+Improve stability under load
+
+3) Architecture Requirement
+
+Active NameNode and YARN ResourceManager must remain on separate servers to avoid CPU, memory, and RPC contention.
