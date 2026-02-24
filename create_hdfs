@@ -1,0 +1,54 @@
+#!/bin/bash
+# hdfs_write_test.sh
+# Usage: ./hdfs_write_test.sh <size_in_GB> [hdfs_directory]
+
+set -e
+
+# Check input
+if [ -z "$1" ]; then
+  echo "Usage: $0 <size_in_GB> [hdfs_directory]"
+  echo "Example: $0 10 /tmp/hdfs_test"
+  exit 1
+fi
+
+SIZE_GB=$1
+HDFS_DIR=${2:-/tmp/hdfs_perf_test}
+
+HOSTNAME=$(hostname -s)
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+LOCAL_FILE="/tmp/hdfs_test_${SIZE_GB}GB_${TIMESTAMP}.bin"
+HDFS_FILE="${HDFS_DIR}/hdfs_test_${SIZE_GB}GB_${TIMESTAMP}.bin"
+
+echo "======================================"
+echo "HDFS WRITE PERFORMANCE TEST"
+echo "File Size     : ${SIZE_GB} GB"
+echo "HDFS Target   : ${HDFS_FILE}"
+echo "======================================"
+
+# Create HDFS directory if not exists
+hdfs dfs -mkdir -p ${HDFS_DIR}
+
+echo "Creating ${SIZE_GB}GB local test file..."
+dd if=/dev/zero of=${LOCAL_FILE} bs=1G count=${SIZE_GB} status=progress
+
+echo "Starting HDFS write test..."
+
+START_TIME=$(date +%s)
+
+hdfs dfs -put -f ${LOCAL_FILE} ${HDFS_FILE}
+
+END_TIME=$(date +%s)
+
+ELAPSED=$((END_TIME - START_TIME))
+MB=$((SIZE_GB * 1024))
+THROUGHPUT=$((MB / ELAPSED))
+
+echo "--------------------------------------"
+echo "Write Time      : ${ELAPSED} seconds"
+echo "Throughput      : ${THROUGHPUT} MB/sec"
+echo "--------------------------------------"
+
+# Cleanup local file
+rm -f ${LOCAL_FILE}
+
+echo "Test completed successfully."
