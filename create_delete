@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+# hdfs_perf_test.sh
+# Write a 10GB file to HDFS, measure write time, then delete it and measure delete time.
+# Usage:
+#   ./hdfs_perf_test.sh [hdfs_dir] [file_size_gb] [runs]
+# Example:
+#   ./hdfs_perf_test.sh /tmp/hdfs_perf_test 10 3
+
+set -euo pipefail
+
+HDFS_DIR="${1:-/tmp/hdfs_perf_test}"
+SIZE_GB="${2:-10}"
+RUNS="${3:-1}"
+
+# Prefer /dev/shm if available (fast temp), else /tmp
+TMP_BASE="/tmp"
+if [[ -d /dev/shm && -w /dev/shm ]]; then
+  TMP_BASE="/dev/shm"
+fi
+
+HOST="$(hostname -s || hostname)"
+TS="$(date +%Y%m%d_%H%M%S)"
+LOCAL_FILE="${TMP_BASE}/hdfs_test_${HOST}_${TS}_${SIZE_GB}GB.bin"
+
+need_cmd() { command -v "$1" >/dev/null 2>&1 || { echo "Missing command: $1" >&2; exit 1; }; }
+need_cmd hdfs
+need_cmd dd
+need_cmd date
+
+echo "=== HDFS Performance Test ==="
+echo "HDFS_DIR     : ${HDFS_DIR}"
+echo "SIZE_GB      : ${SIZE_GB}"
+echo "RUNS         : ${RUNS}"
+echo "LOCAL_FILE   : ${LOCAL_FILE}"
+echo
+
+# Ensure HDFS directory exists
+hdfs dfs -mkdir -p "${HDFS_DIR}"
+
+# Create local test file once
+# Using dd from /dev/zero. This tests HDFS write throughput (not CPU/compression).
+# bs=128M is a reasonable balance; adjust if you want.
+if [[ ! -f "${LOCAL_FILE}" ]]; then
+  echo "Creating local ${SIZE_GB}GB file..."
+  dd if=/dev/zero of="${LOCAL_FILE}" bs=128M count=$(( (SIZE_GB * 1024) / 128 )) status=progress
+  echo "Local file created."
+  echo
+fi
+
+for i in $(seq 1 "${RUNS}"); do
+  HDFS_FILE="${HDFS_DIR}/test_${HOST}_${TS}_run${i}_${SIZE_GB}GB.bin"
+
+  echo "---- Run ${i}/${RUNS} ----"
+  echo "Uploading to HDFS: ${HDFS_FILE}"
+
+  start_ns="$(date +%s%N)"
+  hdfs dfs -put -f "${LOCAL_FILE}" "${HDFS_FILE}"
+  end_ns="$(date +%s%N)"
+
+  elapsed_ns=$((end_ns - start_ns))
+  elapsed_s="$(awk "BEGIN{print ${elapsed_ns}/1000000000}")"
+  mb=$((SIZE_GB * 1024))
+  mbps="$(awk "BEGIN{print ${mb}/${elapsed_s}}")"
+
+  echo "WRITE_TIME_S : ${elapsed_s}"
+  echo "WRITE_MBPS   : ${mbps}"
+  echo
+
+  echo "Deleting from HDFS: ${HDFS_FILE}"
+  start_ns="$(date +%s%N)"
+  hdfs dfs -rm -f "${HDFS_FILE}" >/dev/null
+  end_ns="$(date +%s%N)"
+
+  elapsed_ns=$((end_ns - start_ns))
+  elapsed_s="$(awk "BEGIN{print ${elapsed_ns}/1000000000}")"
+  echo "DELETE_TIME_S: ${elapsed_s}"
+  echo
+done
+
+echo "Cleaning up local file: ${LOCAL_FILE}"
+rm -f "${LOCAL_FILE}"
+
+echo "Done."
