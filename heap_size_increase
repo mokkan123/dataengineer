@@ -1,3 +1,5 @@
+We are observing that checkpoints are occurring very frequently, which is increasing the load on the NameNode. Currently, the checkpoint threshold is set to 1 million transactions. To reduce the frequency of checkpoints and lower the operational overhead on the NameNode, we would like to increase the threshold from 1 million transactions to 2 million transactions.
+
 When increasing heap helps
 
 Increase heap if you see real memory pressure, like:
