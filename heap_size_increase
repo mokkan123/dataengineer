@@ -1,0 +1,37 @@
+When increasing heap helps
+
+Increase heap if you see real memory pressure, like:
+
+Heap used stays > 85–90% for long periods
+
+Frequent Full GC
+
+OutOfMemoryError or “allocation failure” patterns
+
+Metadata is growing (more files/blocks/snapshots) and used heap keeps trending up
+
+In that case, increasing heap gives more headroom and can reduce GC frequency.
+
+When increasing heap does NOT fix it
+
+If the main symptom is:
+
+HeartbeatManager skipping next heartbeat scan due to excessive pause
+
+All DataNodes stale at once
+
+High FSNamesystem lock queue during deletes
+
+High RPC queue time / call queue length
+
+Then the pause is often caused by:
+
+Stop-the-world GC pause (can happen even with plenty of free heap)
+
+FSNamesystem lock contention (e.g., delete storm)
+
+RPC handler starvation (heartbeats queued behind client ops)
+
+Disk/edits sync latency (edits/journals slow)
+
+More heap won’t stop lock contention, and bigger heap can increase worst-case GC pause unless tuned.
