@@ -1,0 +1,13 @@
+Managed day-to-day operations and support of a large Hadoop cluster, ensuring platform stability, reliability, and optimal resource utilization across DEV, PAT, and PROD environments.
+
+Optimized HDFS performance by analyzing cluster metrics and tuning critical Hadoop parameters, improving data access performance, NameNode stability, and overall cluster efficiency.
+
+Investigated and identified the root cause of YARN application failures, implementing configuration and resource tuning to improve YARN scheduler performance and job reliability across multiple environments.
+
+Collaborated with the Dremio engineering team to optimize cluster resource utilization and ensure stable execution of query engines and reflection refresh workloads.
+
+Implemented monitoring and observability using Ambari Metrics and Grafana dashboards, improving visibility into cluster health, JVM performance, NameNode metrics, and DataNode behavior.
+
+Configured and troubleshot Envoy proxy integrations to resolve connectivity and authentication issues affecting Ambari, Ranger, and Kafka services in the development environment.
+
+Designed and implemented NAS-based storage for audit data, enabling centralized storage and efficient querying of audit logs through Dremio across DEV, PAT, and PROD environments.
