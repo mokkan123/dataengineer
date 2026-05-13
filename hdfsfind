@@ -1,0 +1,3 @@
+hdfs dfs -ls -R / | awk '$1 ~ /^d/ && $3 == "yarn" {print $0}' 
+
+hdfs dfs -ls -R / | awk '$1 ~ /^d/ && $3 == "yarn" {print $NF}'
