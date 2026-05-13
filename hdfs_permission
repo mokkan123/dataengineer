@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# HDFS target directory
+HDFS_DIR="/data/test5"
+
+# Local file to upload
+LOCAL_FILE="test1.html"
+
+echo "======================================"
+echo "Checking Hadoop user before HDFS action"
+echo "======================================"
+
+# Bash way to print HADOOP_USER_NAME
+echo "Bash HADOOP_USER_NAME: ${HADOOP_USER_NAME:-Not Set}"
+
+# Java way to print System.getenv("HADOOP_USER_NAME")
+cat > CheckHadoopUser.java <<EOF
+public class CheckHadoopUser {
+    public static void main(String[] args) {
+        System.out.println("Java System.getenv(\"HADOOP_USER_NAME\"): " 
+            + System.getenv("HADOOP_USER_NAME"));
+    }
+}
+EOF
+
+javac CheckHadoopUser.java
+java CheckHadoopUser
+
+# Print actual HDFS user
+echo "HDFS user from command:"
+hdfs dfs -whoami
+
+echo "======================================"
+echo "Creating HDFS directory: $HDFS_DIR"
+echo "======================================"
+
+# Create HDFS directory
+hdfs dfs -mkdir -p "$HDFS_DIR"
+
+# Check if local file exists
+if [ ! -f "$LOCAL_FILE" ]; then
+  echo "Error: $LOCAL_FILE does not exist in the current directory."
+  exit 1
+fi
+
+echo "======================================"
+echo "Uploading file: $LOCAL_FILE"
+echo "======================================"
+
+# Upload file to HDFS
+hdfs dfs -put -f "$LOCAL_FILE" "$HDFS_DIR/"
+
+echo "======================================"
+echo "File uploaded successfully"
+echo "Verifying HDFS directory"
+echo "======================================"
+
+# Verify file and owner
+hdfs dfs -ls "$HDFS_DIR"
