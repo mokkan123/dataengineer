@@ -1,0 +1,86 @@
+#!/bin/bash
+
+# ------------------------------------------------------------
+# Dremio Cloud Cache Cleanup Script
+# Purpose:
+#   - Check disk usage of /app1/yarn/local/dremio/cloudcache/
+#   - If usage is greater than 75%
+#   - Check each subdirectory with lsof
+#   - Remove only directories that are NOT actively used
+# ------------------------------------------------------------
+
+BASE_DIR="/app1/yarn/local/dremio/cloudcache"
+THRESHOLD=75
+LOG_FILE="/var/log/dremio_cloudcache_cleanup.log"
+
+echo "--------------------------------------------------" | tee -a "$LOG_FILE"
+echo "Cleanup started at: $(date)" | tee -a "$LOG_FILE"
+echo "Checking filesystem usage for: $BASE_DIR" | tee -a "$LOG_FILE"
+
+# Check if base directory exists
+if [ ! -d "$BASE_DIR" ]; then
+    echo "ERROR: Directory does not exist: $BASE_DIR" | tee -a "$LOG_FILE"
+    exit 1
+fi
+
+# Get filesystem usage percentage
+USAGE=$(df -P "$BASE_DIR" | awk 'NR==2 {gsub("%","",$5); print $5}')
+
+echo "Current filesystem usage: ${USAGE}%" | tee -a "$LOG_FILE"
+
+# Validate usage value
+if ! [[ "$USAGE" =~ ^[0-9]+$ ]]; then
+    echo "ERROR: Unable to determine filesystem usage." | tee -a "$LOG_FILE"
+    exit 1
+fi
+
+# Only proceed if usage is greater than threshold
+if [ "$USAGE" -le "$THRESHOLD" ]; then
+    echo "Usage is ${USAGE}%, which is not greater than ${THRESHOLD}%. No cleanup needed." | tee -a "$LOG_FILE"
+    exit 0
+fi
+
+echo "Usage is greater than ${THRESHOLD}%. Starting cleanup..." | tee -a "$LOG_FILE"
+
+# Loop through each subdirectory under cloudcache
+for DIR in "$BASE_DIR"/*; do
+
+    # Continue only if it is a directory
+    [ -d "$DIR" ] || continue
+
+    DIR_NAME=$(basename "$DIR")
+
+    echo "Checking directory: $DIR" | tee -a "$LOG_FILE"
+
+    # Optional safety: only process numeric PID-style directories
+    if ! [[ "$DIR_NAME" =~ ^[0-9]+$ ]]; then
+        echo "Skipping non-numeric directory: $DIR_NAME" | tee -a "$LOG_FILE"
+        continue
+    fi
+
+    # Check if any open files exist inside this directory
+    if lsof +D "$DIR" >/tmp/lsof_cloudcache_check_$$.out 2>/dev/null; then
+
+        if [ -s /tmp/lsof_cloudcache_check_$$.out ]; then
+            echo "ACTIVE: Open files found in $DIR. Skipping removal." | tee -a "$LOG_FILE"
+        else
+            echo "INACTIVE: No open files found in $DIR. Removing..." | tee -a "$LOG_FILE"
+            rm -rf -- "$DIR"
+
+            if [ $? -eq 0 ]; then
+                echo "REMOVED: $DIR" | tee -a "$LOG_FILE"
+            else
+                echo "ERROR: Failed to remove $DIR" | tee -a "$LOG_FILE"
+            fi
+        fi
+
+    else
+        echo "WARNING: lsof failed for $DIR. Skipping for safety." | tee -a "$LOG_FILE"
+    fi
+
+done
+
+rm -f /tmp/lsof_cloudcache_check_$$.out
+
+echo "Cleanup completed at: $(date)" | tee -a "$LOG_FILE"
+echo "--------------------------------------------------" | tee -a "$LOG_FILE"
