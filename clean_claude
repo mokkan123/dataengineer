@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# Cleans up inactive Dremio cloudcache subdirectories when disk usage exceeds 75%.
+# Directories under the cache path are assumed to be PID-named; any directory
+# with no open file handles (per lsof) is considered safe to remove.
+
+set -euo pipefail
+
+CACHE_DIR="/app1/yarn/local/dremio/cloudcache"
+THRESHOLD=75
+LOG_PREFIX="[cloudcache-cleanup]"
+
+log()  { echo "$(date '+%Y-%m-%d %T') ${LOG_PREFIX} $*"; }
+warn() { echo "$(date '+%Y-%m-%d %T') ${LOG_PREFIX} WARN  $*" >&2; }
+
+# ── 1. Verify the mount/directory exists ────────────────────────────────────
+if [[ ! -d "$CACHE_DIR" ]]; then
+    warn "Cache directory '$CACHE_DIR' does not exist. Exiting."
+    exit 1
+fi
+
+# ── 2. Check current disk usage % for the filesystem that holds CACHE_DIR ───
+USAGE=$(df --output=pcent "$CACHE_DIR" | tail -1 | tr -d ' %')
+
+log "Filesystem usage at ${USAGE}% (threshold: ${THRESHOLD}%)"
+
+if (( USAGE <= THRESHOLD )); then
+    log "Usage is within threshold. No cleanup needed."
+    exit 0
+fi
+
+log "Usage exceeds threshold. Scanning for inactive cache directories..."
+
+# ── 3. Iterate over first-level subdirectories (PID dirs) ───────────────────
+removed=0
+skipped=0
+errors=0
+
+for pid_dir in "$CACHE_DIR"/*/; do
+    # Strip trailing slash; skip if glob matched nothing
+    pid_dir="${pid_dir%/}"
+    [[ -d "$pid_dir" ]] || continue
+
+    dir_name="$(basename "$pid_dir")"
+
+    # lsof +D lists all open files under the directory tree.
+    # We redirect stderr to /dev/null to suppress "permission denied" noise
+    # from files we can't stat; the exit code still reflects whether any
+    # handles were found.
+    if lsof +D "$pid_dir" > /dev/null 2>&1; then
+        log "  ACTIVE   $dir_name — open file handles found, skipping."
+        (( skipped++ )) || true
+    else
+        log "  REMOVING $dir_name — no open file handles detected."
+        if rm -rf "$pid_dir"; then
+            log "  Removed  $dir_name"
+            (( removed++ )) || true
+        else
+            warn "  Failed to remove $dir_name"
+            (( errors++ )) || true
+        fi
+    fi
+done
+
+# ── 4. Summary ───────────────────────────────────────────────────────────────
+log "Done. Removed: ${removed}  Skipped (active): ${skipped}  Errors: ${errors}"
+
+# Re-check usage so the caller can see the result
+NEW_USAGE=$(df --output=pcent "$CACHE_DIR" | tail -1 | tr -d ' %')
+log "Filesystem usage now at ${NEW_USAGE}%"
