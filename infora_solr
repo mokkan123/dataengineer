@@ -6,3 +6,8 @@ zkcli.sh -zkhost <zookeeper_host>:<port> -cmd getfile /configs/audit_logs/solrco
 
 
 ZKCLI_JVM_FLAGS="-Dzookeeper.sasl.client=false"
+
+
+  <lst name="invariants">
+    <str name="dataConfig"></str>
+  </lst>
