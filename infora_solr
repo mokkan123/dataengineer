@@ -11,3 +11,5 @@ ZKCLI_JVM_FLAGS="-Dzookeeper.sasl.client=false"
   <lst name="invariants">
     <str name="dataConfig"></str>
   </lst>
+This forces the dataConfig request parameter to always be empty, so users cannot pass their own DIH configuration through the URL.
+Apache specifically lists this as a mitigation for SOLR-13669
