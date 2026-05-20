@@ -1,0 +1,5 @@
+zkcli.sh -zkhost <zookeeper_host>:<port> -cmd getfile /configs/audit_logs/solrconfig.xml /path/to/local/solrconfig.xml
+zkcli.sh -zkhost localhost:2181 -cmd getfile /configs/audit_logs/solrconfig.xml ./solrconfig.xml
+
+solr zk cp zk:/configs/audit_logs/solrconfig.xml file:/path/to/local/solrconfig.xml -z <zookeeper_host>:<port>
+zkcli.sh -zkhost <zookeeper_host>:<port> -cmd getfile /configs/audit_logs/solrconfig.xml /path/to/local/solrconfig.xml
