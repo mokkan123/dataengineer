@@ -1,0 +1,129 @@
+#!/bin/bash
+
+set -euo pipefail
+
+SOLR_BIN="/usr/lib/ambari-infra-solr/bin/solr"
+ZK_HOST="localhost:2181"
+ZK_FILE="zk:/infra-solr/configs/audit_logs/solrconfig.xml"
+
+WORK_DIR="/tmp/solrconfig_update_$(date +%Y%m%d_%H%M%S)"
+LOCAL_FILE="${WORK_DIR}/solrconfig.xml"
+BACKUP_FILE="${WORK_DIR}/solrconfig.xml.backup"
+VERIFY_FILE="${WORK_DIR}/solrconfig_verify.xml"
+
+mkdir -p "${WORK_DIR}"
+
+echo "============================================================"
+echo "Downloading solrconfig.xml from ZooKeeper"
+echo "============================================================"
+
+"${SOLR_BIN}" zk cp "${ZK_FILE}" "file:${LOCAL_FILE}" -z "${ZK_HOST}"
+
+if [ ! -s "${LOCAL_FILE}" ]; then
+  echo "ERROR: solrconfig.xml download failed or file is empty"
+  exit 1
+fi
+
+cp -p "${LOCAL_FILE}" "${BACKUP_FILE}"
+
+echo "Backup created:"
+echo "${BACKUP_FILE}"
+
+echo "============================================================"
+echo "Updating DataImportHandler block"
+echo "============================================================"
+
+python3 - <<EOF
+from pathlib import Path
+import re
+import sys
+
+file_path = Path("${LOCAL_FILE}")
+text = file_path.read_text()
+
+# Flexible match:
+# Finds the full requestHandler block where:
+# name="/dataimport"
+# class="solr.DataImportHandler"
+pattern = re.compile(
+    r'(<requestHandler\\b(?=[^>]*name=["\\\']/dataimport["\\\'])(?=[^>]*class=["\\\']solr\\.DataImportHandler["\\\'])[^>]*>)(.*?)(</requestHandler>)',
+    re.DOTALL
+)
+
+match = pattern.search(text)
+
+if not match:
+    print("ERROR: DataImportHandler requestHandler block was not found.")
+    print("Check whether name is /dataimport and class is solr.DataImportHandler.")
+    sys.exit(2)
+
+full_block = match.group(0)
+start_tag = match.group(1)
+body = match.group(2)
+end_tag = match.group(3)
+
+if 'lst name="invariants"' in full_block or "lst name='invariants'" in full_block:
+    print("Invariants block already exists. No change required.")
+    sys.exit(0)
+
+invariants_block = '''
+
+  <lst name="invariants">
+    <str name="solr-data-config"></str>
+  </lst>
+'''
+
+new_block = start_tag + body.rstrip() + invariants_block + "\\n" + end_tag
+
+new_text = text[:match.start()] + new_block + text[match.end():]
+
+file_path.write_text(new_text)
+
+print("DataImportHandler block updated successfully.")
+EOF
+
+echo "============================================================"
+echo "Validating XML"
+echo "============================================================"
+
+if command -v xmllint >/dev/null 2>&1; then
+  xmllint --noout "${LOCAL_FILE}"
+else
+  python3 - <<EOF
+import xml.etree.ElementTree as ET
+ET.parse("${LOCAL_FILE}")
+print("XML validation passed.")
+EOF
+fi
+
+echo "============================================================"
+echo "Updated section preview"
+echo "============================================================"
+
+grep -A20 -B5 'name="/dataimport"' "${LOCAL_FILE}" || true
+
+echo "============================================================"
+echo "Uploading updated solrconfig.xml to ZooKeeper"
+echo "============================================================"
+
+"${SOLR_BIN}" zk cp "file:${LOCAL_FILE}" "${ZK_FILE}" -z "${ZK_HOST}"
+
+echo "============================================================"
+echo "Verifying uploaded solrconfig.xml"
+echo "============================================================"
+
+"${SOLR_BIN}" zk cp "${ZK_FILE}" "file:${VERIFY_FILE}" -z "${ZK_HOST}"
+
+if grep -A25 -B5 'name="/dataimport"' "${VERIFY_FILE}" | grep -q 'lst name="invariants"'; then
+  echo "SUCCESS: Invariants block found after upload."
+else
+  echo "ERROR: Upload verification failed. Invariants block not found."
+  exit 1
+fi
+
+echo "============================================================"
+echo "Completed successfully"
+echo "============================================================"
+echo "Backup file: ${BACKUP_FILE}"
+echo "Updated file: ${LOCAL_FILE}"
+echo "Verify file: ${VERIFY_FILE}"
