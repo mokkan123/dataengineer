@@ -1,0 +1,58 @@
+I wanted to outline our proposed approach to restore HDP/Hadoop service management in the PAT environment, and request approval to proceed.
+
+
+BACKGROUND
+
+Following the removal of jdk1.8.0_431 from the PAT environment, we are currently unable to stop or start HDP/Hadoop services. Ambari and the Hadoop services are still referencing the old Java path, causing service management to fail. The currently available Java version in the environment is jdk1.8.0_471.
+
+
+REQUIRED FIRST STEP — AMBARI CONFIGURATION UPDATE
+
+Before any service management actions can be taken, we need to update Ambari to reference the new JDK. A PR has been raised for this:
+
+https://github.com/changes
+
+Once the PR is merged, the steps are:
+1. Run the deployment pipeline
+2. Restart the Ambari Server: systemctl restart ambari-server
+
+
+PRE-START BACKUP (MANDATORY)
+
+Before bringing the NameNode back online, we will take a backup of the latest FSImage from the NameNode metadata directory:
+
+  /app2/hdfs/namenode/current/
+
+This protects the latest HDFS namespace metadata and is a non-negotiable precautionary step before any NameNode restart.
+
+
+RECOVERY OPTIONS
+
+Option 1 — Temporarily Restore Old Java for Controlled Shutdown (Preferred)
+As the running services are still tied to jdk1.8.0_431, we recommend temporarily restoring the old JDK first to ensure a clean, controlled shutdown of all services. Once stopped cleanly, we will update the Ambari and Hadoop configuration to reference jdk1.8.0_471 and bring all services back up on the new version. This is the safest approach as it avoids forcing a stop on services that are still dependent on the old Java path.
+
+Option 2 — Stop/Start via Ambari with New Java
+After Ambari is updated to use jdk1.8.0_471, attempt to stop and start HDP/Hadoop services directly through Ambari. This is a viable path if Ambari can communicate successfully with all agents and services on the new Java path without requiring the old JDK to be present.
+
+Option 3 — Server Restart via Ambari Console
+If services cannot be stopped cleanly by either method above, we will restart each server one by one and bring services back online through the Ambari Console after confirming the Java configuration is updated. This option will only be used as a last resort and only after the FSImage backup is confirmed complete.
+
+
+RECOMMENDED SEQUENCE
+
+1. Merge the PR to update Ambari Java configuration to jdk1.8.0_471
+2. Run the deployment pipeline
+3. Restart Ambari Server
+4. Confirm Ambari agents and services are pointing to the new Java path
+5. Take a backup of the latest NameNode FSImage
+6. Temporarily restore jdk1.8.0_431 and perform a controlled shutdown of all services (Option 1)
+7. Update Ambari/Hadoop configuration to jdk1.8.0_471
+8. Start all services using the new Java version jdk1.8.0_471
+9. If controlled shutdown is not viable, attempt stop/start directly via Ambari (Option 2)
+10. If neither Option 1 nor Option 2 succeeds, proceed with server-by-server restart via Ambari Console (Option 3)
+
+This sequencing prioritises a safe, controlled shutdown before introducing the new Java version, and ensures HDFS namespace metadata is protected before any critical services are restarted.
+
+Please let us know if you have any questions or would like to discuss further before we proceed. Awaiting your approval to merge the PR and begin.
+
+Thanks
