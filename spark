@@ -5,3 +5,7 @@ Thread.currentThread
   .getURLs
   .filter(_.toString.toLowerCase.contains("hive"))
   .foreach(println)
+
+
+print("Catalog:", spark.conf.get("spark.sql.catalogImplementation"))
+print("Metastore URI:", spark.conf.get("spark.hadoop.hive.metastore.uris", "NOT SET"))
