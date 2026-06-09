@@ -1,0 +1,7 @@
+// 2. Filter — just hive JARs
+Thread.currentThread
+  .getContextClassLoader
+  .asInstanceOf[java.net.URLClassLoader]
+  .getURLs
+  .filter(_.toString.toLowerCase.contains("hive"))
+  .foreach(println)
