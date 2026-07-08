@@ -1,0 +1,4 @@
+# DEV DataNode list
+# one hostname per line
+dev-dn01.example.com
+dev-dn02.example.com
