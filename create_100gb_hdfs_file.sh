@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+LOCAL_DIR="/app5"
+LOCAL_FILE="${LOCAL_DIR}/test_file_100GB.dat"
+HDFS_DIR="/data"
+HDFS_FILE="${HDFS_DIR}/$(basename "${LOCAL_FILE}")"
+SIZE="100G"
+MODE="${1:-sparse}"
+
+usage() {
+  echo "Usage: sudo $0 [sparse|full]"
+  echo "  sparse (default): creates the local file quickly with truncate"
+  echo "  full:             allocates the complete 100 GB on /app5"
+}
+
+if [[ "${MODE}" != "sparse" && "${MODE}" != "full" ]]; then
+  usage
+  exit 2
+fi
+
+command -v hdfs >/dev/null 2>&1 || {
+  echo "ERROR: The 'hdfs' command is not available in PATH." >&2
+  exit 1
+}
+
+if [[ ! -d "${LOCAL_DIR}" ]]; then
+  echo "ERROR: ${LOCAL_DIR} does not exist." >&2
+  exit 1
+fi
+
+if [[ ! -w "${LOCAL_DIR}" ]]; then
+  echo "ERROR: ${LOCAL_DIR} is not writable by user $(id -un)." >&2
+  exit 1
+fi
+
+if [[ -e "${LOCAL_FILE}" ]]; then
+  echo "ERROR: Local file already exists: ${LOCAL_FILE}" >&2
+  exit 1
+fi
+
+if hdfs dfs -test -e "${HDFS_FILE}"; then
+  echo "ERROR: HDFS destination already exists: ${HDFS_FILE}" >&2
+  exit 1
+fi
+
+if [[ "${MODE}" == "full" ]]; then
+  required_bytes=$((100 * 1024 * 1024 * 1024))
+  available_bytes=$(df --output=avail -B1 "${LOCAL_DIR}" | tail -n 1 | tr -d ' ')
+
+  if (( available_bytes < required_bytes )); then
+    echo "ERROR: ${LOCAL_DIR} does not have 100 GiB of free space." >&2
+    exit 1
+  fi
+
+  command -v fallocate >/dev/null 2>&1 || {
+    echo "ERROR: The 'fallocate' command is required for full mode." >&2
+    exit 1
+  }
+
+  echo "Allocating ${SIZE} local file: ${LOCAL_FILE}"
+  fallocate -l "${SIZE}" "${LOCAL_FILE}"
+else
+  command -v truncate >/dev/null 2>&1 || {
+    echo "ERROR: The 'truncate' command is required for sparse mode." >&2
+    exit 1
+  }
+
+  echo "Creating ${SIZE} sparse local file: ${LOCAL_FILE}"
+  truncate -s "${SIZE}" "${LOCAL_FILE}"
+fi
+
+echo "Creating HDFS directory if needed: ${HDFS_DIR}"
+hdfs dfs -mkdir -p "${HDFS_DIR}"
+
+echo "Uploading ${LOCAL_FILE} to ${HDFS_FILE}"
+hdfs dfs -put "${LOCAL_FILE}" "${HDFS_DIR}/"
+
+echo "Upload completed successfully."
+hdfs dfs -ls -h "${HDFS_FILE}"
+
