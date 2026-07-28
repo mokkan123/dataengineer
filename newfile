@@ -1,0 +1,6 @@
+We're in the process of removing disks from VMs to cut storage costs across each environment. Each environment has 40+ nodes, and Prod has around 66 nodes. I discussed this with Lian, who recommended getting your confirmation before proceeding.
+
+Our plan is to create a separate change for each environment and list the relevant hostnames in each one. Is there anything else you need from us?
+
+Thanks,
+Ananthan
