@@ -1,0 +1,15 @@
+Hi Sonny,
+
+Since most of our DEV VMs are currently sitting idle, could we reuse two existing nodes instead of adding two new VMs?
+
+Proposed steps:
+
+Select two existing DataNode/NodeManager hosts from the default YARN label.
+Reassign the selected nodes from the default label to the Dremio label.
+Use these nodes for Dremio workloads instead of provisioning two additional VMs.
+Properly decommission the two existing Dremio hosts, remove them from Ambari, and then delete the associated VMs.
+In the next phase, identify any additional unnecessary VMs, shut them down, and decommission them following the appropriate process.
+
+This approach will help us reuse the available DEV capacity, avoid unnecessary VM provisioning, and further reduce infrastructure costs.
+
+Please let me know your thoughts.
